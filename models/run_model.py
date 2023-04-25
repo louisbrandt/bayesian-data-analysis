@@ -7,11 +7,12 @@ from simple_temp import SimpleTempModel
 from weatherglm import WeatherGLM
 from naivear import ARModel
 from laggedar import LaggedARModel
+from combinedmodel import CombinedModel
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Bayesian workflow.')
-    parser.add_argument('model', type=str, help='Model to use', choices=['weatherglm', 'simpletempmodel', 'armodel','laggedarmodel'])
-    parser.add_argument('--data-path', type=str, default='/Users/louisbrandt/itu/6/bachelor/data/processed_data.csv', help='Path to data file')
+    parser.add_argument('model', type=str, help='Model to use', choices=['weatherglm', 'simpletempmodel', 'armodel','laggedarmodel','combinedmodel'])
+    parser.add_argument('--n_lags', type=int, default=7, help='Number of lags to use in AR models')
     parser.add_argument('--n_days', type=int, default=90, help='Number of last days of data to use')
     parser.add_argument('--n_test_days', type=int, default=21, help='Number of test days')
     parser.add_argument('--draws', type=int, default=1000, help='Number of MCMC samples')
@@ -20,7 +21,6 @@ def parse_arguments():
     parser.add_argument('--target-accept', type=float, default=0.9, help='Target acceptance rate for NUTS sampler')
     parser.add_argument('--test', action='store_true', help='Predict on test data or not')
     parser.add_argument('--sample-posterior', action='store_true', help='Sample posterior (otherwise, load trace)')
-    parser.add_argument('--include-recent', action='store_true', help='Include last 15 days in predictions')
     parser.add_argument('--only-predict', action='store_true', help='After getting trace - only predict')
     parser.add_argument('--pred-ci', type=float, default=0.95, help='Confidence interval for prediction plots')
     return parser.parse_args()
@@ -28,18 +28,21 @@ def parse_arguments():
 def get_model_class_and_params(args):
     if args.model == 'weatherglm':
         model_class = WeatherGLM
-        model_params = {'data_path': args.data_path, 'n_test_days': args.n_test_days, 'n_days': args.n_days}
+        model_params = {'n_days': args.n_days}
     elif args.model == 'armodel':
         model_class = ARModel
-        model_params = {'data_path': args.data_path, 'n_test_days': args.n_test_days, 'n_days': args.n_days}
+        model_params = {'n_days': args.n_days}
     elif args.model == 'simpletempmodel':
         model_class = SimpleTempModel
-        model_params = {'data_path': args.data_path, 'n_test_days': args.n_test_days, 'n_days': args.n_days}
+        model_params = {'n_days': args.n_days}
     elif args.model == 'laggedarmodel':
         model_class = LaggedARModel
-        model_params = {'data_path': args.data_path, 'n_test_days': args.n_test_days, 'n_days': args.n_days}
-    return model_class, model_params
+        model_params = {'n_days': args.n_days,'n_lags': args.n_lags}
+    elif args.model == 'combinedmodel':
+        model_class = CombinedModel
+        model_params = {'n_days': args.n_days,'n_lags': args.n_lags}
 
+    return model_class, model_params
 
 def main():
     args = parse_arguments()
@@ -69,12 +72,12 @@ def main():
         model.generate_ppc()
         model.plot_ppc()
 
+# --- validate
+    model.validate()
+
     if args.test:
     # --- predictions
-        model.generate_predictions(include_recent=args.include_recent)
-        model.plot_test_distribution()
-        model.plot_predictions()
-        model.report_model()
+        model.test()
 
 if __name__ == '__main__':
     main()

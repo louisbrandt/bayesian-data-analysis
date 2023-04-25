@@ -1,3 +1,4 @@
+import json
 import os
 import pickle
 import cloudpickle
@@ -12,46 +13,38 @@ import xarray as xr
 
 # ----------- Parent Class ------------- #
 class BayesianModel():
-    def __init__(self,name,data_path,cat_cols,num_cols,n_days,n_test_days):
+    def __init__(self,name,cat_cols,num_cols,n_days):
         self.name = name
-        self.data = None
-        self.test_data = None
-        self.trace = None
-        self.posterior_predictive = None
-        self.data_path = data_path
         self.cat_cols = cat_cols if cat_cols is not None else []
         self.num_cols = num_cols if num_cols is not None else []
-        self.time_index_flag=False
         self.n_days = n_days
-        self.n_test_days = n_test_days
         self.set_data()
-        self.split_data()
         self.define_model()
-        # create a dictionary of the hyperparameters to store with the trace and plots for reproducibility
-        self.hyperparams = {
-                'data': str(self.n_days) + '_days',
-                'test': str(self.n_test_days) + '_days_from' + str(self.test_data.date.min())
-            }
         # add hyperparams to the pickle & plot path at the end of the string
         self.pkl_path = '/Users/louisbrandt/itu/6/bachelor/pickles/'+self.name+'/'
         self.eval_path = '/Users/louisbrandt/itu/6/bachelor/eval/'+self.name+'/'
-        self.pkl_path += f"data={self.hyperparams['data']}"
-        self.eval_path += '&'.join([f'{key}={val}' for key, val in self.hyperparams.items()])
+        self.pkl_path += f"{n_days}"
+        self.eval_path += f"{n_days}"
+        if self.time_series_flag:
+            self.pkl_path += f'_{self.n_lags}'
+            self.eval_path += f'_{self.n_lags}'
         self.pkl_path += '/'
         self.eval_path += '/'
         # Check if directories exist and create them if not
-        for path in [self.pkl_path, self.eval_path]:
+        for path in [self.pkl_path, self.eval_path, self.eval_path+'valid/', self.eval_path+'test/']:
             if not os.path.exists(path):
                 os.makedirs(path)
 
-    def split_data(self):
-        self.test_data = self.data[-self.n_test_days:]
-        self.data = self.data[:-self.n_test_days]
-        self.data = self.data[-self.n_days:]
-    
     def set_data(self):
-        data = pd.read_csv(self.data_path)
-        self.data = data.astype({col: 'category' for col in self.cat_cols})
+        self.train_data = pd.read_csv('/Users/louisbrandt/itu/6/bachelor/data/processed/train.csv')
+        self.valid_data = pd.read_csv('/Users/louisbrandt/itu/6/bachelor/data/processed/valid.csv')
+        self.test_data = pd.read_csv('/Users/louisbrandt/itu/6/bachelor/data/processed/test.csv')
+
+        self.train_data = self.train_data.astype({col: 'category' for col in self.cat_cols})
+        self.valid_data = self.valid_data.astype({col: 'category' for col in self.cat_cols})
+        self.test_data = self.test_data.astype({col: 'category' for col in self.cat_cols})
+
+        self.train_data = self.train_data[-self.n_days:]
     
     def define_model(self):
         raise NotImplementedError()
@@ -66,7 +59,7 @@ class BayesianModel():
 # ----------- store trace ------------- #
     def save_trace(self):
         with open(self.pkl_path+'trace.pkl', 'wb') as f:
-            cloudpickle.dump({'model': self.model, 'trace': self.trace,'y_obs':self.data}, f)
+            cloudpickle.dump({'model': self.model, 'trace': self.trace,'y_obs':self.train_data}, f)
         print(f"[DONE] {self.name} trace saved to {self.pkl_path}")
     
     def load_trace(self):
@@ -156,75 +149,32 @@ class BayesianModel():
             plt.show()  # display the plot
             print(f"[DONE] {self.name} plotted ppc")
         plt.close()
-    
+
 # ----------- forecasting ------------- #
-    def generate_predictions(self,include_recent=False):
+    def generate_predictions(self,data):
         print(f"[TASK] {self.name} generating samples from predictive distribution given data")
 
-        self.prediction_data = self.test_data.reset_index(drop=True)
+        prediction_data = data.copy()
 
         with self.model:
             # set data to test data in order to set the mean of the likelihood distribution
             for var in self.cat_cols:
-                pm.set_data({var: self.prediction_data[var].cat.codes})
+                pm.set_data({var: prediction_data[var].cat.codes})
             for var in self.num_cols:
-                pm.set_data({var: self.prediction_data[var].to_numpy()})
+                pm.set_data({var: prediction_data[var].to_numpy()})
 
-            pm.set_data({'revenue': self.prediction_data['revenue'].to_numpy()}) # for shape
+            pm.set_data({'revenue': prediction_data['revenue'].to_numpy()}) # for shape
 
             # generate samples from predictive distribution
-            self.test_posterior_predictive = pm.sample_posterior_predictive(self.trace, var_names=['target'])
-            self.predictions = self.test_posterior_predictive.posterior_predictive.target.values
+            test_posterior_predictive = pm.sample_posterior_predictive(self.trace, var_names=['target'])
+            predictions = test_posterior_predictive.posterior_predictive.target.values
 
-            if include_recent:
-                # include last 15 days of test predictions in plot
-                self.prediction_data = pd.concat([self.data[-15:], self.prediction_data],ignore_index=True)
-
-                # get last 15 days of training predictions
-                ppc = self.ppc.posterior_predictive.target.values
-                # flatten ppc
-                flat_ppc = ppc.reshape(-1, ppc.shape[-1])
-                # get last 15 days of training predictions
-                flat_ppc = flat_ppc[:,-15:]
-                flat_predictions = self.predictions.reshape(-1, self.predictions.shape[-1])
-                self.flat_predictions = np.concatenate([flat_ppc, flat_predictions], axis=1)
-            else:
-                self.flat_predictions = self.predictions.reshape(-1, self.predictions.shape[-1])
+            flat_predictions = predictions.reshape(-1, predictions.shape[-1])
 
         print(f"[DONE] {self.name} test samples generated from predictive distribution ")
+        return flat_predictions
 
-    def plot_test_distribution(self,true_values=True, save=True, show=False):
-        print(f"[TASK] {self.name} plotting test distribution")
-
-        PRED_COLOR = 'r'
-        TRUE_COLOR = 'k'
-        ACCENT = 'orange'
-
-        fig, ax = plt.subplots()
-        # plot all predictions as a histogram with a density plot 
-        az.plot_dist(self.flat_predictions, kind='kde', rug=True, label='Predicted',color=PRED_COLOR)
-
-        # add a vertical line for the mean
-        plt.vlines(self.flat_predictions.mean(), *plt.gca().get_ylim(),color=PRED_COLOR,linestyle='--')
-
-        if true_values:
-            # overlay the observed data distribution
-            az.plot_dist(self.test_data.revenue, kind='kde', rug=True, label='True',color=TRUE_COLOR)
-            # add a vertical line for the mean
-            plt.vlines(self.test_data.revenue.mean(), *plt.gca().get_ylim(),color=TRUE_COLOR,linestyle='--')
-
-        plt.title('Posterior Predictive Distribution on Test')
-        plt.legend(loc='upper left', framealpha=1)
-
-        if save:
-            plt.savefig(self.eval_path+'prediction_distribution.png')  # save the plot to a file
-            print(f"[DONE] {self.name} saved prediction distribution to file {self.eval_path}prediction_distribution.png")
-        if show:
-            plt.show()
-        plt.close()
-
-
-    def plot_predictions(self, true_values=True, save=True, show=False, distplot=True, ci=0.95):
+    def plot_predictions(self,prediction_data,flat_predictions,true_values=True,ci=0.95):
         print(f"[TASK] {self.name} plotting predictions")
 
         PRED_COLOR = 'r'
@@ -233,60 +183,140 @@ class BayesianModel():
 
         fig, ax = plt.subplots()
         
-        date_range = pd.date_range(self.prediction_data.date.min(), periods=len(self.prediction_data), freq='D')
+        date_range = pd.date_range(prediction_data.date.min(), periods=len(prediction_data), freq='D')
 
         # plot hdi
-        az.plot_hdi(date_range, self.flat_predictions, hdi_prob=ci, smooth=False,plot_kwargs={'alpha': 0.3},ax=ax)
+        az.plot_hdi(date_range, flat_predictions, hdi_prob=ci, smooth=False,plot_kwargs={'alpha': 0.3},ax=ax)
         ax.legend([f'{ci*100}% HDI'], loc='upper left', framealpha=1)
 
         # plot predicted mean
-        plt.plot(date_range,self.flat_predictions.mean(axis=0),label='Predicted Mean',c=PRED_COLOR,linestyle='--')
+        plt.plot(date_range,flat_predictions.mean(axis=0),label='Predicted Mean',c=PRED_COLOR,linestyle='--')
         
         # rotate dates
         plt.xticks(rotation=45)
 
         if true_values:
             # plot true values
-            plt.plot(date_range, self.prediction_data.revenue, label='True',c=TRUE_COLOR,linestyle='-',alpha=0.7)
+            plt.plot(date_range, prediction_data.revenue, label='True',c=TRUE_COLOR,linestyle='-',alpha=0.7)
             # plot error between true and predicted points
-            plt.vlines(date_range, self.prediction_data.revenue, self.flat_predictions.mean(axis=0), alpha=0.6,color=ACCENT)
-            plt.fill_between(date_range, self.prediction_data.revenue, self.flat_predictions.mean(axis=0), alpha=0.2, label='Error',color=ACCENT)
+            plt.vlines(date_range, prediction_data.revenue, flat_predictions.mean(axis=0), alpha=0.6,color=ACCENT)
+            plt.fill_between(date_range, prediction_data.revenue, flat_predictions.mean(axis=0), alpha=0.2, label='Error',color=ACCENT)
 
         # add a vertical line to indicate the end of the training data
-        plt.axvline(pd.to_datetime(self.test_data.date.min()), c='k', linestyle='--', alpha=0.3)
+        # plt.axvline(pd.to_datetime(self.test_data.date.min()), c='k', linestyle='--', alpha=0.3)
         # add text to indicate the end of the training data
-        plt.text(pd.to_datetime(self.test_data.date.min()), ax.get_ylim()[1]*0.7, 'Test Start', rotation=90, alpha=0.5)
+        # plt.text(pd.to_datetime(self.test_data.date.min()), ax.get_ylim()[1]*0.7, 'Test Start', rotation=90, alpha=0.5)
 
         plt.legend()
+        return fig
+
+    def plot_pred_distribution(self,prediction_data,flat_predictions,true_values=True):
+        print(f"[TASK] {self.name} plotting test distribution")
+
+        PRED_COLOR = 'r'
+        TRUE_COLOR = 'k'
+        ACCENT = 'orange'
+
+        fig, ax = plt.subplots()
+        # plot all predictions as a histogram with a density plot 
+        az.plot_dist(flat_predictions, kind='kde', rug=True, label='Predicted',color=PRED_COLOR)
+
+        # add a vertical line for the mean
+        plt.vlines(flat_predictions.mean(), *plt.gca().get_ylim(),color=PRED_COLOR,linestyle='--')
+
+        if true_values:
+            # overlay the observed data distribution
+            az.plot_dist(prediction_data.revenue, kind='kde', rug=True, label='True',color=TRUE_COLOR)
+            # add a vertical line for the mean
+            plt.vlines(prediction_data.revenue.mean(), *plt.gca().get_ylim(),color=TRUE_COLOR,linestyle='--')
+
+        plt.title('Posterior Predictive Distribution on Test')
+        plt.legend(loc='upper left', framealpha=1)
+        
+        return fig
+
+    def validate(self,save=True,show=False):
+        print(f"[TASK] {self.name} validating model")
+        
+        # get predictions
+        valid_predictions = self.generate_predictions(data=self.valid_data)
+        fig = self.plot_predictions(self.valid_data,valid_predictions,true_values=True, ci=0.95)
+
         if save:
-            plt.savefig(self.eval_path+'predictions.png')  # save the plot to a file
-            print(f"[DONE] {self.name} saved predictions to file {self.eval_path}predictions.png")
+            plt.savefig(self.eval_path+'valid/predictions.png')
+            print(f"[DONE] {self.name} saved validation plot to file {self.eval_path}valid/predictions.png")
         if show:
             plt.show()
         plt.close()
 
-    def compute_log_likelihood(self):
-        # Compute the standard deviation of the predictive distribution for each observation
-        predictive_std = np.std(self.flat_predictions, axis=0)
-        # Compute the mean of the predictive distribution for each observation
-        predictive_mean = np.mean(self.flat_predictions, axis=0)
-        # Compute the log-likelihood of the predictions
-        log_likelihoods = stats.norm.logpdf(self.prediction_data['revenue'].to_numpy(), loc=predictive_mean, scale=predictive_std)
+        fig = self.plot_pred_distribution(self.valid_data,valid_predictions,)
 
-        return np.sum(log_likelihoods)
+        if save:
+            plt.savefig(self.eval_path+'valid/prediction_distribtution.png')
+            print(f"[DONE] {self.name} saved plot to file {self.eval_path}valid/prediction_distribution.png")
+        if show:
+            plt.show()
+        plt.close()
+        
+        # compute metrics 
+        valid_metrics = self.compute_metrics(valid_predictions,data=self.valid_data)
 
-    def report_model(self):
-        # Compute log likelihood
-        log_like = self.compute_log_likelihood()
+        with open(self.eval_path+'valid/valid_metrics.json', 'w') as f:
+            json.dump(valid_metrics, f)
+        print(f"[DONE] {self.name} saved validation metrics to file {self.eval_path}valid/valid_metrics.json")
 
-        # Prepare the output string
-        output_string = f"{self.name}{self.n_days} Model Metrics:\n"
-        output_string += f"log likelihood: {log_like}\n"
+    def test(self,save=True,show=False):
+        print(f"[TASK] {self.name} testing model")
 
-        # Write the output string to a file
-        with open(self.eval_path+'model_metrics.txt', 'w') as f:
-            f.write(output_string)
-            f.write('\n')
+        # get prediction
+        test_predictions = self.generate_predictions(data=self.test_data)
+        fig = self.plot_predictions(self.test_data,test_predictions,true_values=True, ci=0.95)
+        if save:
+            plt.savefig(self.eval_path+'test/predictions.png')
+            print(f"[DONE] {self.name} saved test plot to file {self.eval_path}test/predictions.png")
+        if show:
+            plt.show()
+        plt.close()
 
-        print('[DONE]',output_string)
+        fig = self.plot_pred_distribution(self.test_data,test_predictions,)
+
+        if save:
+            plt.savefig(self.eval_path+'test/prediction_distribtution.png')
+            print(f"[DONE] {self.name} saved test plot to file {self.eval_path}prediction_distribution.png")
+        if show:
+            plt.show()
+        plt.close()
+
+        # compute metrics
+        test_metrics = self.compute_metrics(test_predictions,data=self.test_data)
+        with open(self.eval_path+'test/test_metrics.json', 'w') as f:
+            json.dump(test_metrics, f)
+        print(f"[DONE] {self.name} saved test metrics to file {self.eval_path}test/test_metrics.json")
+
+    def compute_metrics(self,predictions,data):
+        print(f"[TASK] {self.name} computing metrics")
+
+        true_data = data.revenue.to_numpy()
+        predictions = np.array(predictions)
+
+        # Calculate the metrics for each sample
+        mae = np.mean(np.abs(predictions - true_data), axis=1)
+        mse = np.mean(np.square(predictions - true_data), axis=1)
+        rmse = np.sqrt(mse)
+        
+        # Calculate log-likelihood
+        log_likelihoods = np.zeros(predictions.shape[0])
+        for i in range(predictions.shape[0]):
+            log_likelihoods[i] = stats.norm.logpdf(true_data, loc=predictions[i], scale=np.std(predictions, axis=0)).sum()
+        log_likelihood = np.mean(log_likelihoods)
+
+        # Calculate the mean and standard deviation of the metrics across all samples
+        metrics = {
+            'MAE': {'mean': np.mean(mae), 'std': np.std(mae)},
+            'MSE': {'mean': np.mean(mse), 'std': np.std(mse)},
+            'RMSE': {'mean': np.mean(rmse), 'std': np.std(rmse)},
+            'Log-likelihood': {'mean': log_likelihood},
+        }
+
+        return metrics
 

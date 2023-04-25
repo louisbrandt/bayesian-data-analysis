@@ -13,13 +13,14 @@ from bayesian import BayesianModel
 
 # -------------- Simple Temp Model ----------------- #
 class SimpleTempModel(BayesianModel):
-    def __init__(self, data_path,n_days,n_test_days):
+    def __init__(self, n_days):
         cat_cols = ['dow']
         num_cols = ['tempmax']
-        super().__init__(name='LinearTemperatureDowModel', data_path=data_path, cat_cols=cat_cols, num_cols=num_cols, n_days=n_days, n_test_days=n_test_days)
+        self.time_series_flag = False
+        super().__init__(name='SimpleTemp', cat_cols=cat_cols, num_cols=num_cols, n_days=n_days)
 
     def define_model(self):
-        # assumes self.data contains training data in DataFrame 
+        # assumes self.train_data contains training data in DataFrame 
 
         # define model
         with pm.Model() as self.model:
@@ -28,20 +29,18 @@ class SimpleTempModel(BayesianModel):
             b = pm.Normal('beta', mu=1,sigma=1)
             sigma = pm.HalfNormal('sigma',sigma=1)
             a_t = pm.Normal('alpha_temp',mu=1,sigma=1)
-            a_dow = pm.Normal('alpha_dow',mu=1,sigma=1,shape=len(self.data.dow.cat.categories))
+            a_dow = pm.Normal('alpha_dow',mu=1,sigma=1,shape=len(self.train_data.dow.cat.categories))
 
             # continuous data
-            T = pm.MutableData('tempmax',self.data.tempmax.to_numpy())
+            T = pm.MutableData('tempmax',self.train_data.tempmax.to_numpy())
             # index variable
-            Dow = pm.MutableData('dow',self.data.dow.cat.codes)
+            Dow = pm.MutableData('dow',self.train_data.dow.cat.codes)
 
             # target variable
-            R = pm.MutableData('revenue',self.data.revenue.to_numpy())
+            R = pm.MutableData('revenue',self.train_data.revenue.to_numpy())
 
             # deterministic rv
             mu = pm.Deterministic('mu', b + a_t * T + a_dow[Dow])
 
             # likelihoood 
             target = pm.Normal('target', mu=mu, sigma=sigma, observed=R)
-            # nu = pm.Exponential('nu', lam=1/15)
-            # target = pm.StudentT('target', nu=nu, mu=mu, sigma=sigma, observed=R)

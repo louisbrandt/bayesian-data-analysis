@@ -1,0 +1,45 @@
+\section{Methodology}
+
+Try some different models for the problem 
+For each model, motivate it, describe the archetecture and the fitting and evaluation procedure.
+
+\subsection{Simple Temperature \& Week-day Model}
+From a high level, keeping with bayesian principles: prior/ expert knowledge
+motivated a simple linear regression with temperature and day of the week as
+predictors. Backup up by EDA, clear weekly pattern and positive temperature
+correlation over the all time period.
+
+\subsubsection{Model architecture}
+
+-- Priors 
+  - unassuming normal distributions
+--Likelihood
+  - Normal likelihood with unknown variance and mean given by the linear model
+  variance models certainty on a given day
+  - Student T:
+  We might want to consider a Student T likelihood as it is more robust to outliers
+  and has a heavier tail than the normal distribution. This is useful as we have
+  a lot of data and we want to be able to capture the occasional outlier.
+
+Fitting
+-- MCMC
+  - NUTS
+Good convergence, short training
+
+Prior predictive check
+  Normal distribution - standard good tings -10 to 10
+  Student T - -inf to inf, not ideal 
+  Data might not be so spread out after all
+
+
+\subsubsection{Model}
+
+Motivation
+
+\subsubsubsection{Model architecture}
+
+- Priors
+
+- Likelihood 
+
+

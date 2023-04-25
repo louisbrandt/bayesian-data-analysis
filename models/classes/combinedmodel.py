@@ -11,11 +11,13 @@ import aesara.tensor as at
 import xarray as xr
 from bayesian import BayesianModel
 
-class LaggedARModel(BayesianModel):
+class CombinedModel(BayesianModel):
     def __init__(self, n_days, n_lags):
+        cat_cols = ['precip']
+        num_cols = ['tempmax']
         self.n_lags = n_lags
         self.time_series_flag = True
-        super().__init__(name='LaggedARModel', n_days=n_days, cat_cols=[], num_cols=[])
+        super().__init__(name='CombinedModel', n_days=n_days, cat_cols=cat_cols, num_cols=num_cols)
 
     def add_lags(self, train_data, valid_data, test_data):
         d = pd.concat([train_data, valid_data, test_data],ignore_index=True)
@@ -54,17 +56,28 @@ class LaggedARModel(BayesianModel):
             intercept = pm.Normal('intercept', mu=0, sigma=10)
             betas = pm.Normal('betas', mu=0, sigma=10, shape=self.n_lags)
 
-            # observed data
-            R = pm.MutableData("revenue", self.train_data.revenue.to_numpy())
-            R_diff = pm.MutableData("revenue_diff", self.train_data.revenue_diff.to_numpy())
+            # Priors for weather-related and time-related features
+            a_t = pm.Normal("alpha_temp", mu=0, sigma=1)
+            a_p = pm.Normal("alpha_precip", mu=0, sigma=1, shape=len(self.train_data.precip.cat.categories))
 
             # Prepare lagged revenue_diff data
             lagged_revenue_diffs = [pm.MutableData(f"lag_diff_{lag}", self.train_data[f"lag_diff_{lag}"].to_numpy()) for lag in range(1, self.n_lags + 1)]
+
+            # Observed data and index variables for weather-related and time-related features
+            T = pm.MutableData("tempmax", self.train_data.tempmax.to_numpy())
+            P = pm.MutableData("precip", self.train_data.precip.cat.codes)
+
+            # Observed data for revenue_diff
+            R = pm.MutableData("revenue", self.train_data.revenue.to_numpy())
+            R_diff = pm.MutableData("revenue_diff", self.train_data.revenue_diff.to_numpy())
 
             # Calculate expected revenue_diff
             expected_revenue_diff_sum = intercept
             for i, lagged_revenue_diff in enumerate(lagged_revenue_diffs):
                 expected_revenue_diff_sum += betas[i] * lagged_revenue_diff
+
+            # Add weather-related and time-related features to the expected revenue_diff
+            expected_revenue_diff_sum += a_t * T + a_p[P]  
             expected_revenue_diff = pm.Deterministic('expected_revenue_diff', expected_revenue_diff_sum)
 
             # Likelihood (sampling distribution) of the observations
@@ -72,7 +85,7 @@ class LaggedARModel(BayesianModel):
             target = pm.Normal('target', mu=expected_revenue_diff, sigma=sigma, observed=R_diff)
 
 ## ----------- forecasting ------------- #
-#    def generate_predictions(self,include_recent=True,multiday=True):
+#    def generate_predictions(self,multiday=True):
 #        print(f"[TASK] {self.name} generating samples from predictive distribution given data")
 #        if include_recent:
 #            # insert the last 15 days of the training data into the test data 1 extra for time series models
@@ -83,9 +96,14 @@ class LaggedARModel(BayesianModel):
 #
 #        with self.model:
 #            # set data to test data in order to set the mean of the likelihood distribution
+#            for var in self.cat_cols:
+#                pm.set_data({var: self.prediction_data[var].cat.codes})
+#            for var in self.num_cols:
+#                pm.set_data({var: self.prediction_data[var].to_numpy()})
+#
 #            for lag in range(1,self.n_lags+1):
 #                pm.set_data({f'lag_diff_{lag}': self.prediction_data[f'lag_diff_{lag}'].to_numpy()})
-#            pm.set_data({'revenue_diff': np.zeros(len(self.prediction_data))})# self.prediction_data['revenue_diff'].to_numpy()})
+#            pm.set_data({'revenue_diff':np.zeros(len(self.prediction_data))})# self.prediction_data['revenue_diff'].to_numpy()})
 #
 #            # generate samples from predictive distribution
 #            self.test_posterior_predictive = pm.sample_posterior_predictive(self.trace, var_names=['target'])
@@ -112,6 +130,11 @@ class LaggedARModel(BayesianModel):
 
         with self.model:
             # set data to test data in order to set the mean of the likelihood distribution
+            for var in self.cat_cols:
+                pm.set_data({var: prediction_data[var].cat.codes})
+            for var in self.num_cols:
+                pm.set_data({var: prediction_data[var].to_numpy()})
+
             for lag in range(1,self.n_lags+1):
                 pm.set_data({f'lag_diff_{lag}': prediction_data[f'lag_diff_{lag}'].to_numpy()})
             pm.set_data({'revenue_diff':np.zeros(len(prediction_data))}) #prediction_data['revenue_diff'].to_numpy()})

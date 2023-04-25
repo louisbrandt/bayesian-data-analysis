@@ -1,0 +1,59 @@
+
+\section{Data}
+Revenue data from 2020-01-01 to 2023-03-21 with a consistent test set of
+2023-03-22 to 2023-04-05.
+Total in-store daily revenue for the company
+Weather Data 
+
+\subsection{Stationarity}
+There are many stores that contribute to the generation of revenue, and over
+the time period, the number of stores has increased from 7 to 15. By this
+nature data != stationary. 
+Why problem? 
+not taking a variable with impact on the trend of the underlying data account
+means spurious correlations are possible, which are relationships between
+variables that appear to be significant but are, in fact, not. 
+Some models assume stationarity
+Options:
+Include number of stores as a variable
+Modelling each store as a separate model
+Differencing data
+Detrending data
+Transformation
+
+\subsection{Processing}
+Normalise Target Variable
+Normalise Continuous Variables
+
+Categorical / Index variables
+Index variables in bayesian models index a unique prior distribution for each
+instantce of the variable
+
+The Index variables
+- Day of week
+- Day in month
+- Month of year
+- Year since since 2020
+- Precipitation since even distribution of 0 \& <1 \& >1
+
+Choosing relevant weather variables
+
+-- Missing values / outliers
+On some days, store is closed. 
+Problem because we need revenue data for each day CUZ.......
+All days with revenue less than 60000 are replaced with the average of the surrounding days
+
+
+\subsection{Exploratory Data Analysis}
+Plots
+Correlations
+Time Series
+
+\subsection{Data Split}
+Depends on the question we want to answer
+By default, we want to model the underlying trend of the data in order to approximate the data generation process to allow accurate prediction
+Priority here is to forecast the future best, not explain the previous data best - similar but differnt questions.
+The priority here is to forecast 3 weeks of revenue
+Train: 2020-01-01 to 2023-03-21
+Test: 2023-03-22 to 2023-04-05
+
