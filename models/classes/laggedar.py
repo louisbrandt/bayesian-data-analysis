@@ -51,8 +51,8 @@ class LaggedARModel(BayesianModel):
     def define_model(self):
         with pm.Model() as self.model:
             # Priors for the intercept and linear regression coefficients
-            intercept = pm.Normal('intercept', mu=0, sigma=10)
-            betas = pm.Normal('betas', mu=0, sigma=10, shape=self.n_lags)
+            intercept = pm.Normal('intercept', mu=0, sigma=1)
+            betas = pm.Normal('betas', mu=0, sigma=1, shape=self.n_lags)
 
             # observed data
             R = pm.MutableData("revenue", self.train_data.revenue.to_numpy())
@@ -68,44 +68,10 @@ class LaggedARModel(BayesianModel):
             expected_revenue_diff = pm.Deterministic('expected_revenue_diff', expected_revenue_diff_sum)
 
             # Likelihood (sampling distribution) of the observations
-            sigma = pm.HalfNormal('sigma', sigma=10)
+            sigma = pm.HalfNormal('sigma', sigma=1)
             target = pm.Normal('target', mu=expected_revenue_diff, sigma=sigma, observed=R_diff)
 
-## ----------- forecasting ------------- #
-#    def generate_predictions(self,include_recent=True,multiday=True):
-#        print(f"[TASK] {self.name} generating samples from predictive distribution given data")
-#        if include_recent:
-#            # insert the last 15 days of the training data into the test data 1 extra for time series models
-#            self.prediction_data = pd.concat([self.data[-16:],self.test_data],ignore_index=True)
-#        else:
-#            self.prediction_data = self.test_data
-#        self.prediction_data.reset_index(inplace=True,drop=True)
-#
-#        with self.model:
-#            # set data to test data in order to set the mean of the likelihood distribution
-#            for lag in range(1,self.n_lags+1):
-#                pm.set_data({f'lag_diff_{lag}': self.prediction_data[f'lag_diff_{lag}'].to_numpy()})
-#            pm.set_data({'revenue_diff': np.zeros(len(self.prediction_data))})# self.prediction_data['revenue_diff'].to_numpy()})
-#
-#            # generate samples from predictive distribution
-#            self.test_posterior_predictive = pm.sample_posterior_predictive(self.trace, var_names=['target'])
-#
-#            # flatten target array
-#            self.predictions = self.test_posterior_predictive.posterior_predictive.target.values
-#            self.flat_predictions = self.predictions.reshape(-1, self.predictions.shape[-1])
-#
-#            revenue_predictions = np.zeros_like(self.flat_predictions)
-#            for i in range(1, revenue_predictions.shape[1]):
-#                # print the prediction of revenue to screen 
-#                revenue_predictions[:, i] = self.prediction_data['revenue'][i - 1] + self.flat_predictions[:, i]
-#
-#            # assign and remove first day as it will be 0
-#            self.flat_predictions = revenue_predictions[:,1:]
-#            self.prediction_data = self.prediction_data[1:]
-#
-#        print(f"[DONE] {self.name} test samples generated from predictive distribution")
-
-    def generate_predictions(self,data):
+    def generate_predictions(self,data,multiday=None):
         print(f"[TASK] {self.name} generating samples from predictive distribution given data")
 
         prediction_data = data.copy()
@@ -122,9 +88,12 @@ class LaggedARModel(BayesianModel):
             flat_predictions = predictions.reshape(-1, predictions.shape[-1])
 
             revenue_predictions = np.zeros_like(flat_predictions)
+            revenue_predictions[:, 0] = prediction_data.lag_1[0] + flat_predictions[:, 0]
             for i in range(1, revenue_predictions.shape[1]):
                 # print the prediction of revenue to screen 
                 revenue_predictions[:, i] = prediction_data['revenue'][i - 1] + flat_predictions[:, i]
 
         print(f"[DONE] {self.name} test samples generated from predictive distribution ")
-        return flat_predictions
+
+        # print(revenue_predictions)
+        return revenue_predictions

@@ -1,2 +1,31 @@
 \section{Results}
 
+An arsenal of models fitted to various subsets of the data, each with their own
+explicit assumptions, sets a foundation for (+necessitates) a rigorous evaluation
+and discussion of results and their implications. This section highlights notable
+findings and applies the lens of bayesian model comparison to bring order and 
+to interpret the performance of the models. 
+
+Metrics that should be familiar to the reader are used to quantify the predictive
+power of the models, such as the mean absolute error (MAE), while bayesian model 
+comparison tools are employed to answer the research questions posed in the 
+introduction, LOO validation \& WAIC.
+
+\subsection{Model Comparison}
+
+In the Bayesian realm, observations fitted to models are part of the model,
+dictating both the confidence in, and the shape of the posterior through the
+likelihood function. The result of this is an assumption that models compared
+with each other are fitted on the set of observations, modelling the same 
+generative process. Much of the deliberation throughout this project has been 
+concerned with the precise selection of data to fit a model on, as well as 
+the choice of model itself; but I hope you are starting to see how these two
+decisions are one and the same.
+
+% Prediction evaluation 
+Research question is best performing model for the case study: which is predicting revenue
+for restaurant chain, so how can we decide which model is the best at predicting revenue. 
+We can see which model predicts best on unseen data, mimicing the real world. 
+To answer this, we can a few question: how close does the model predict to the actual value?
+how well does the model explain the true data? how well does the model predict future data?
+

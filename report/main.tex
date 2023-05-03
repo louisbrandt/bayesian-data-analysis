@@ -1,5 +1,15 @@
 \documentclass{article}
 
+% imports
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{natbib}
+\usepackage{amsmath} % split environment
+\usepackage{booktabs} % \toprule, \midrule, and \bottomrule commands,
+\usepackage{array} % for \arraybackslash
+
 % begin document
 \begin{document}
 
@@ -30,9 +40,11 @@
 \input{sections/discussion}
 
 % conclusion
-\input{sections/conclusion}
+%\input{sections/conclusion}
 
 % references
-\bibliographystyle{plain}
+% including the bibliography with natbib 
+\bibliographystyle{plainnat}
+\bibliography{references}
 
 \end{document}

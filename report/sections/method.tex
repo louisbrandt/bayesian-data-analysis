@@ -1,25 +1,102 @@
 \section{Methodology}
 
-Try some different models for the problem 
-For each model, motivate it, describe the archetecture and the fitting and evaluation procedure.
+In this section, a comprehensive description of the various Bayesian models
+employed in the study will be presented. The main goal is to compare the
+performance of different Bayesian models and evaluate their usefulness in
+accurately forecasting daily revenue. To this end, four distinct models
+incorporating various predictors will be explored: the \texttt{Simple Temp.
+Model}, \texttt{Weather GLM}, \texttt{Lagged AR model} and \texttt{Combined
+Model}.
+First, the \texttt{Simple Temperature and Week-Day Model} motivated by the
+observed weekly pattern and positive correlation with temperature in the data.
+This model serves as a baseline for comparison with more sophisticated models,
+as well as being an instructive introduction to the application of the Bayesian
+method.
+The \texttt{Weather Generalised Linear Model} is a natural extention,
+encorporating further weather and calendar predictors attempting to better
+grasp the underlying generative process.
+Subsequently, the \texttt{Lagged Auto-Regressive Model} takes the temporal
+dependency of daily revenue into account. By incorporating previous revenue
+observations as predictors, the \texttt{Lagged AR Model} aims to capture the
+inherent time-series structure present in the data.
+Finally, the \texttt{Combined Model} aims to exploit complementary philosophies
+of the preceeding models, using the temporal dependence to anchor a forecast,
+and adjusting the prediction based on the most influential weather predictors.
+Each model was implementated in the \texttt{Python} library for Bayesian
+Modelling, \texttt{PyMC} and the motivation, architecture, fitting
+procedure, and forecasting process will be discussed. 
 
-\subsection{Simple Temperature \& Week-day Model}
-From a high level, keeping with bayesian principles: prior/ expert knowledge
-motivated a simple linear regression with temperature and day of the week as
-predictors. Backup up by EDA, clear weekly pattern and positive temperature
-correlation over the all time period.
+\subsection{Simple Temperature Model}
+In line with Bayesian principles, which emphasise the integration of prior
+knowledge or expert opinions into the modeling process, the first model
+developed starts by simply modelling maximum daily temperature and day of the
+week as predictors, assuming a linear relationship with the total daily revenue
+This decision is further supported by the initial exploration of the data,
+which reveals a weekly pattern and a positive temperature correlation over the
+whole time period.
+The motivation for starting with temperature as a predictor stems from the idea
+that consumer behavior, especially in the context of food and beverage
+consumption, can be influenced by weather conditions. Warmer temperatures might
+encourage more people to go out and dine or purchase take-out food, leading to
+higher revenue for the restaurant chain. Similarly, people's eating habits and
+schedules vary throughout the week, with the end of the week usually being
+busier than weekdays.
+By incorporating these two factors into the bayesian linear regreession, the
+aim is to account for some of the most salient and intuitive patterns observed
+in the data. This simple model serves as a starting point from which more
+complex relationships can further be explored allowing for a refinement in the
+understanding of the factors influencing daily revenue. Moreover, it allows us
+to assess the explanatory power of these predictors and provides a baseline for
+comparison with more advanced models developed later in the study.
 
 \subsubsection{Model architecture}
 
--- Priors 
-  - unassuming normal distributions
---Likelihood
-  - Normal likelihood with unknown variance and mean given by the linear model
-  variance models certainty on a given day
-  - Student T:
-  We might want to consider a Student T likelihood as it is more robust to outliers
-  and has a heavier tail than the normal distribution. This is useful as we have
-  a lot of data and we want to be able to capture the occasional outlier.
+% Statistical defintion
+Here, one can start to get a sense of the logic and assumptions made by
+defining a basic Bayesian model. By definition, the target variable is modeled
+as - or distributed as - a probability distribution, in this case a normal
+distribution, which happens to be the most common, well-understood and flexible
+distributions in statistics. By this, we are capturing uncertainty - or
+confidence - in our modelling; implicitly stating that the most likely value of
+the target variable is in and around its mean, while we also accept a lower
+probablility of the true value being further away from the mean - related to
+the distribution's standard deviation.
+
+This normal distribution is parametrised by the mean, $\mu$, and
+standard deviation, $\sigma$, as we know, but how do we define these
+parameters? The mean, $\mu$, is defined as a function of the predictors and
+model parameters, and is where the linear relationship between the predictors
+and the target variable is assumed. As it is determined by other random
+variables, $\mu$ is said to be a deterministic random variable, while the
+standard deviation, $\sigma$, distributed HalfNormally, is a stochastic
+random variable, able to take on any value in its range.
+
+As mentioned above, the model assumes a linear relationship between the 
+predictors and the target variable which can be expressed as follows:
+\begin{equation}
+  \label{eq:temp_weekday_model}
+  \begin{split}
+    y_i &\sim \mathcal{N}(\mu_i, \sigma) \\
+    \mu_i &= \beta + \alpha_0 \cdot \text{temp}_i + \alpha_1 \cdot \text{weekday}_i \\
+    \beta &\sim \mathcal{N}(0, 1) \\
+    \boldsymbol{\alpha} &\sim \mathcal{N}(0, 1) \\
+    \sigma &\sim \text{HalfNormal}(1) \\
+  \end{split}
+\end{equation}
+
+No specific assumptions are being explicitly outlined in the model definition
+beyond the linearity of the relationship between the predictors and the target
+variable. The priors for the regression coefficients and the standard deviation
+parameter of the likelihood function are defined as uninformative normal
+distributions with mean 0 and standard deviation 1. The normal distribution
+assumption for the target variable is based on the central limit theorem, which
+states that under certain conditions, the distribution of the mean of a large
+number of independent and identically distributed random variables will be
+approximately normal. The HalfNormal distribution for the standard deviation
+parameter ensures that the estimated standard deviation is always positive,
+which is a reasonable constraint for most practical applications. Overall, the
+model makes relatively weak assumptions about the distributional properties of
+the data, which allows for flexibility and generality in its application.
 
 Fitting
 -- MCMC
@@ -31,15 +108,83 @@ Prior predictive check
   Student T - -inf to inf, not ideal 
   Data might not be so spread out after all
 
+% PYMC implementation
+PyMC's philosophy allows models to be defined in code in the same manner as they are defined statistically.
+The code is detailed below in Figure \ref{fig:code-temp}. 
 
-\subsubsection{Model}
+\begin{lstlisting}[language=Python, caption=PyMC implementation of the Simple Temperature Model, label=fig:code-temp]
+with pm.Model() as self.model:
+
+    # priors
+    b = pm.Normal('beta', mu=0,sigma=1)
+    sigma = pm.HalfNormal('sigma',sigma=1)
+    a_t = pm.Normal('alpha_temp',mu=0,sigma=1)
+    a_dow = pm.Normal('alpha_dow',mu=0,sigma=1,
+                shape=len(self.train_data.dow.cat.categories))
+
+    # data containers
+    T = pm.MutableData('tempmax',self.train_data.tempmax.to_numpy())
+    Dow = pm.MutableData('dow',self.train_data.dow.cat.codes)
+
+    # target variable
+    R = pm.MutableData('revenue',self.train_data.revenue.to_numpy())
+
+    # deterministic rv
+    mu = pm.Deterministic('mu', b + a_t * T + a_dow[Dow])
+
+    # likelihoood 
+    target = pm.Normal('target', mu=mu, sigma=sigma, observed=R)
+
+\end{lstlisting}
+
+\subsubsection{Inference}
+
+\subsubsection{Prediction}
+
+\subsection{Weather GLM}
 
 Motivation
 
-\subsubsubsection{Model architecture}
+\subsubsection{Model architecture}
 
-- Priors
+% Statistical defintion
 
-- Likelihood 
+  - Student T:
+  We might want to consider a Student T likelihood as it is more robust to outliers
+  and has a heavier tail than the normal distribution. This is useful as we have
+  a lot of data and we want to be able to capture the occasional outlier.
 
+% PYMC implementation
+
+\subsubsection{Inference}
+
+\subsubsection{Prediction}
+
+\subsection{Lagged AR Model}
+
+Motivation
+
+\subsubsection{Model architecture}
+
+% Statistical defintion
+
+% PYMC implementation
+
+\subsubsection{Inference}
+
+\subsubsection{Prediction}
+
+\subsection{Combined Model}
+
+Motivation
+
+\subsubsection{Model architecture}
+
+% Statistical defintion
+
+% PYMC implementation
+
+\subsubsection{Inference}
+
+\subsubsection{Prediction}
 

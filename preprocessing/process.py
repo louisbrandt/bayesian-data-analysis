@@ -12,11 +12,11 @@ def process_train(rev, wea):
     df = join_revenue_weather(rev,wea)
 
     # --- write df to csv
-    df.to_csv('/Users/louisbrandt/itu/6/bachelor/data/deploy/processed_data.csv',index=False)
+    df.to_csv('/Users/louisbrandt/itu/6/bachelor/data/processed_data.csv',index=False)
     print('Data written to csv.')
 
     # --- write globas to csv 
-    with open('/Users/louisbrandt/itu/6/bachelor/data/deploy/globals.csv','w') as f:
+    with open('/Users/louisbrandt/itu/6/bachelor/data/globals.csv','w') as f:
         f.write(f'{r_gbs[0]},{r_gbs[1]},{w_gbs[0]},{w_gbs[1]},{w_gbs[2]},{w_gbs[3]},{w_gbs[4]},{w_gbs[5]},{w_gbs[6]},{w_gbs[7]}')
     print('Globals written to csv.')
 
@@ -51,7 +51,7 @@ def process_test(rev, wea):
 
 def unnormalise_data(df):
     # load globals
-    with open('data/deploy/globals.csv','r') as f:
+    with open('/Users/louisbrandt/itu/6/bachelor/data/globals.csv','r') as f:
         data = f.read()
         data = data.split(',')
         Y_MEAN = float(data[0])
@@ -68,9 +68,9 @@ def unnormalise_data(df):
     # unnormalise data
     df['revenue'] = df['revenue'] * Y_STD + Y_MEAN
     df['humidity'] = df['humidity'] * HUMIDITY_STD + HUMIDITY_MEAN
-    df['temp_max'] = df['temp_max'] * TEMP_MAX_STD + TEMP_MAX_MEAN
-    df['cloud'] = df['cloud'] * CLOUD_STD + CLOUD_MEAN
-    df['wind'] = df['wind'] * WIND_STD + WIND_MEAN
+    df['tempmax'] = df['tempmax'] * TEMP_MAX_STD + TEMP_MAX_MEAN
+    df['cloudcover'] = df['cloudcover'] * CLOUD_STD + CLOUD_MEAN
+    df['windspeed'] = df['windspeed'] * WIND_STD + WIND_MEAN
     return df
 
 if __name__ == '__main__':

@@ -1,59 +1,306 @@
-
 \section{Data}
-Revenue data from 2020-01-01 to 2023-03-21 with a consistent test set of
-2023-03-22 to 2023-04-05.
-Total in-store daily revenue for the company
-Weather Data 
+
+% notes
+% Choosing relevant weather variables
+% -- Missing values / outliers
+% On some days, store is closed. 
+% Problem because we need revenue data for each day CUZ.......
+% All days with revenue less than 60000 are replaced with the average of the surrounding days
+% Categorical / Index variables
+% Index variables in bayesian models index a unique prior distribution for each
+% instantce of the variable
+
+The data for this case study is two-fold. The random variable of interest is
+the total daily revenue of a restaurant chain - \texttt{OLIOLI} - and is a sum
+of the revenue generated for each transaction retrieved and formatted via the
+Point of Sale systems in each store. For each day, collected and forecasted
+weather data is sourced from Visual Crossing - a leading provider of weather
+data. The data set used for this project is populated with revenue figures and
+weather metrics for each day from the 1st of January 2020 to the 23rd of April
+2023.
+% Data Description: Provide an overview of the dataset, including the number of observations, the time period covered, and the variables available. Explain the meaning of each variable and its relevance to your research question.
+
+The data set contains 1209 observations, each representing a day and the following variables were collected
+
+\begin{figure}[h!]
+    \begin{subfigure}{0.5\textwidth}
+      \centering
+      \caption{Variable Source}
+      \label{fig:vars1}
+      \begin{tabular}{l}
+          \hline 
+          \textbf{Weather variables} \\
+          \quad\textit{Temperature} \\
+          \quad\textit{Precipitation} \\
+          \quad\textit{Wind speed} \\
+          \quad\textit{Cloud cover} \\
+          \quad\textit{Humidity} \\[0.3em]
+          \textbf{Calendar variables} \\
+          \quad\textit{Day of week} \\
+          \quad\textit{Day of month} \\
+          \quad\textit{Month} \\
+          \quad\textit{Year} \\[0.3em]
+          \textbf{Revenue variables} \\
+          \quad\textit{Revenue} \\
+          \quad\textit{Number of stores open} \\[0.3em]
+          \hline
+      \end{tabular}
+    \end{subfigure}%
+    \begin{subfigure}{0.5\textwidth}
+      \centering
+      \caption{Variables in Model}
+      \label{fig:vars2}
+      \begin{tabular}{l}
+          \hline 
+          \textbf{Continuous variables} \\
+          \quad\textit{Temperature} \\
+          \quad\textit{Wind speed} \\
+          \quad\textit{Cloud cover} \\
+          \quad\textit{Humidity} \\
+          \quad\textit{Revenue} \\[0.3em]
+          \textbf{Index variables} \\
+          \quad\textit{Precipitation} \\
+          \quad\textit{Day of week} \\
+          \quad\textit{Day of month} \\
+          \quad\textit{Month} \\
+          \quad\textit{Year} \\
+          \quad\textit{Number of stores open} \\[0.3em]
+          \hline
+      \end{tabular}
+    \end{subfigure}%
+    \caption{Variables}
+    \label{fig:variables}
+\end{figure}
+
+\subsection{Missing Values}
+
+All values in the data that were below a threshold were deemed invalid; due to
+unique circumstances like national holidays, COVID, shop closures, etc. In
+order to fix this, interpolation was used to replace these numbers with data
+from a timeframe that included 7 days before and 7 days after the problematic
+value.
+
+This method ensured the data was holistic and reliable while maintaining the
+general structure and relationships between the variables. By employing this
+window, any potential trends or patterns are captured and the replacement
+numbers are consistent with the surrounding data.
+
+Using machine learning algorithms or more complex imputation methods like
+K-nearest neighbours imputation are other options for handling missing
+variables. However, the interpolation approach used was thought to be
+appropriate for this dataset and the objective, hence these alternatives were
+not pursued.
+
+
+\subsection{Standardisation}
+
+Standardisation can be an important preprocessing step in Bayesian modelling,
+as it assures that variables are on a comparable scale, enabling more efficient
+sampling resulting in a more stable posterior. \cite{gelman2013philosophy}
+
+Continuous variables are normalised by scaling them to have a mean of 0 and a
+standard deviation of 1, like so.
+
+\begin{equation}
+  x_{s} = \frac{x - \mu_x}{\sigma_x}
+\end{equation}
+
+The impact of extreme values in the target variable can also be reduced by
+standardisation. To normalise the target variable, we apply the same formula as
+for continuous variables.
+
+Another important point is the consitency of this standardisation. Any new data
+collected and procecessed must of course be standardised with the same
+statistical metrics as the rest of the data to ensure accurate and coherent
+inference and prediction. This was achieved by storing the mean and standard 
+deviation of each variable in the data set, and applying the standardisation 
+formula to new data using these values. Finally, to unstandardise the data, the 
+reverse of the standardisation formula is applied, using the stored mean and
+standard deviation. 
+
+\begin{equation}
+  x = x_{s} \cdot \sigma_x + \mu_x
+\end{equation}
+
 
 \subsection{Stationarity}
-There are many stores that contribute to the generation of revenue, and over
-the time period, the number of stores has increased from 7 to 15. By this
-nature data != stationary. 
-Why problem? 
-not taking a variable with impact on the trend of the underlying data account
-means spurious correlations are possible, which are relationships between
-variables that appear to be significant but are, in fact, not. 
-Some models assume stationarity
-Options:
-Include number of stores as a variable
-Modelling each store as a separate model
-Differencing data
-Detrending data
-Transformation
+The nature of the problem introduces some caveats which need to be addressed in
+the data. We know there are many stores that contribute to the generation of
+revenue, and over the time period, the number of stores has increased from
+seven to fifteen. As a company that grows and expands over time, the natural
+and, for the company, ideal trend for the revenue to follow is upward. This
+means that that the underlying data generating process changes - impacted by
+the number of stores open at a given time, which season we are currently in and
+percieved recognition and popularity of the company, to name a few factors. In
+some cases, it is exactly this trend that we want to model and predict, but
+doing so demands certainty of the isolation of the exact variables that impact
+the trend. In practise, this was not feasable and some of the models developed
+this paper, make some assumptions about the underlying data generating process.
+One of these is the assumption of stationarity, which states that the
+statistical properties of the data remain constant over time. We want to model
+the data as a function of time, rather than a function of time and other
+variables, avoiding the modelling of spurious correlations between variables
+and permitting the modelling of the data as a time series, which is a common
+approach to forecasting. 
+%\cite{stationarity} \cite{time_series_stationarity} 
 
-\subsection{Processing}
-Normalise Target Variable
-Normalise Continuous Variables
+\subsubsection{Methods for resolving non-stationarity}
 
-Categorical / Index variables
-Index variables in bayesian models index a unique prior distribution for each
-instantce of the variable
+For resolving the issue of stationarity, we have a few options. Firstly, by
+adding the number of stores open as an available variable, we can hope the
+model will capture the cause of the increase in mean of the underlying data
+generating process. This is a valid option that was implemented, and we will
+discuss the implecations of taking such an approach, but it is not clear that
+the number of stores is the only factor that influences the mean of the data
+over time. 
 
-The Index variables
-- Day of week
-- Day in month
-- Month of year
-- Year since since 2020
-- Precipitation since even distribution of 0 \& <1 \& >1
+Resolving non-stationarity can also be achieved by detrending the data. By
+identifying and removing underlying trends from the data, it is possible to
+lessen the impact of seasonality and long-term trends, highlight cyclical
+patterns, and make it simpler to spot patterns and linkages in the data,
+resulting in more accurate forecasts. 
 
-Choosing relevant weather variables
+One of these options is to not model the total revenue itself, but rather the
+revenue difference between each day and the previous day to remove the linear
+trend. This is known as differencing and is useful as the $n^{th}$ order
+difference of non-stationarity is not necessarily non-stationary.
 
--- Missing values / outliers
-On some days, store is closed. 
-Problem because we need revenue data for each day CUZ.......
-All days with revenue less than 60000 are replaced with the average of the surrounding days
+Furthermore, we know that Bayesian models have a robust framework in place for
+modelling data in a hierarchical manner, and it would be equally valid to model
+the problem as such. The total revenue is a sum of the revenue generated by
+each store, and one of the benefits of taking such an approach would be
+removing this specific aspect of non-stationarity from the problem. This
+approach necessitates a far more vigorous approach to processing and modelling
+the data and was out of scope for this project.
 
+\subsubsection{Testing data for stationarity}
+The notebook \texttt{stationarity\_testing.ipynb} is a thorough evaluation of
+the stationarity of the data, the main findings of which will be detaied here. 
+
+The test for stationarity performed was the Augmented Dickey-Fuller test
+%\cite{adf_test}
+. The null hypothesis of the test is that the data is non-stationary, and we
+then check for the presence of a unit root. A time series with a unit root
+indicates that the process that produced the data followed a random walk rather
+than being stationary, which is due to the series' heavy reliance on its
+historical values influencing the trends to drifts over time. Implementing the
+test with the Python library \texttt{statsmodels} is simple; the results of
+which can be seen in Table \ref{tab:adf_og}. 
+\begin{table}[h]
+\centering
+\caption{ADF Results - Original Data}
+\label{tab:adf_og}
+\begin{tabular}{@{} >{\arraybackslash}l r @{}}
+\toprule
+\textbf{Test Statistic} & -2.1179 \\ \addlinespace[0.1em]
+\textbf{P-Value} & 0.2374 \\ \addlinespace[0.1em]
+\textbf{Critical Values} & \\ 
+\ \ \ \ 1\% & -3.4359 \\ 
+\ \ \ \ 5\% & -2.8640 \\ 
+\ \ \ \ 10\% & -2.5681 \\ \addlinespace[0.1em]
+\textbf{Information Criterion} & 1609.6593 \\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+Since the test statistic is greater than the critical values at all
+significance levels, you cannot reject the null hypothesis that the time series
+has a unit root (i.e. it is non-stationary). This conclusion is further
+supported by the p-value of 0.2374, which is greater than the
+standard scientific threshold 0.05.
+
+\begin{table}[h]
+\centering
+\caption{ADF Results - First Difference}
+\label{tab:adf_dif}
+\begin{tabular}{@{} >{\arraybackslash}l r @{}}
+\toprule
+\textbf{Test Statistic} & -10.5442 \\ \addlinespace[0.1em]
+\textbf{P-Value} & 8.4946e-19 \\ \addlinespace[0.1em]
+\textbf{Critical Values} & \\ 
+\ \ \ \ 1\% & -3.4359 \\ 
+\ \ \ \ 5\% & -2.8640 \\ 
+\ \ \ \ 10\% & -2.5681 \\ \addlinespace[0.1em]
+\textbf{Information Criterion} & 1611.8563 \\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table \ref{tab:adf_dif} depicts the results of the test after taking the first
+difference of the daily revenue data. we can see that the test statistic is now
+less than the critical values at all significance levels, and the p-value is
+now less than 0.05. This indicates that we can reject the null hypothesis -
+that the time series has a unit root - and say the first difference is
+stationary.
+
+This is further supported by the plots of the data, which can be seen in the 
+notebook. The original data shows an upward trend, which is removed by taking 
+the first difference. The first difference also shows a more consistent 
+variance over time, which is another requirement for stationarity.
+
+%DO PLOTS 
+
+By phrasing the question differently, it is possible to fulfill the requirement
+of stationarity when it is needed.
 
 \subsection{Exploratory Data Analysis}
+
 Plots
 Correlations
 Time Series
 
-\subsection{Data Split}
-Depends on the question we want to answer
-By default, we want to model the underlying trend of the data in order to approximate the data generation process to allow accurate prediction
-Priority here is to forecast the future best, not explain the previous data best - similar but differnt questions.
-The priority here is to forecast 3 weeks of revenue
-Train: 2020-01-01 to 2023-03-21
-Test: 2023-03-22 to 2023-04-05
+\begin{table}[h]
+\centering
+\caption{Correlation Coefficients - Continuous Predictors}
+\label{tab:correlation-numeric}
+\begin{tabular}{@{} >{\arraybackslash}l r @{}}
+\textbf{Variable} & \textbf{PCC} \\ \addlinespace[0.1em]
+\toprule
+\texttt{temperature} & 0.3341 \\
+\texttt{humidity} & -0.3154 \\
+\texttt{wind\_speed} & -0.2710 \\
+\texttt{cloud\_cover} & -0.1628 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
+From an initial exploration of the data, we can get a sense for the isolated
+correlations of our various predictors and the target variable. Figure
+\ref{tab:correlation-numeric} plots the linear relationships between the
+normalised revenue and each of the normalised continuous predictors:
+temperature, humidity, wind speed, and cloud cover. 
+
+\begin{table}[h]
+\centering
+\caption{Kendall's Tau - Categorical Predictors}
+\label{tab:correlation-categorical}
+\begin{tabular}{@{} >{\arraybackslash}l r @{}}
+\textbf{Variable} & \textbf{Tau} \\ \addlinespace[0.1em]
+\toprule
+\texttt{precipitation} & -0.1748 \\
+\texttt{n\_stores} & 0.4688 \\
+\texttt{dow} & 0.0051 \\
+\texttt{day} & -0.0333 \\
+\texttt{month} & -0.0578 \\
+\texttt{year} & 0.5059 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Data Split}
+The data split depends on the specific research question we aim to address. In
+our case, the primary goal is to accurately forecast future revenues rather
+than solely explaining past data, which is a similar yet slightly different
+question: our focus lies on forecasting revenue for a period of three weeks.
+To achieve this, we partition the data into training, validation, and test
+sets. The training set covers the period from \texttt{2020-01-01} to \texttt{2023-03-12} and is
+used to develop the model. The validation set, spanning from \texttt{2023-03-13} to
+\texttt{2023-04-02}, allows for model selection and tuning. Finally, the test set,
+ranging from \texttt{2023-04-03} to \texttt{2023-04-24}, is utilized to assess
+the final model's performance on unseen data. Using a 3-week window for
+validation and testing is a somewhat arbitrary choice, but in the real-world
+financial and operational decisions commonly look 2-4 weeks into the future, so
+a 3-week window is a reasonable choice, and short enough to minimise severe
+uncertainty propegation. This data splitting strategy ensures that the model's
+predictive ability is fairly evaluated and can be optimized for forecasting future
+revenue.

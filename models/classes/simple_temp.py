@@ -26,10 +26,10 @@ class SimpleTempModel(BayesianModel):
         with pm.Model() as self.model:
 
             # priors
-            b = pm.Normal('beta', mu=1,sigma=1)
+            b = pm.Normal('beta', mu=0,sigma=1)
             sigma = pm.HalfNormal('sigma',sigma=1)
-            a_t = pm.Normal('alpha_temp',mu=1,sigma=1)
-            a_dow = pm.Normal('alpha_dow',mu=1,sigma=1,shape=len(self.train_data.dow.cat.categories))
+            a_t = pm.Normal('alpha_temp',mu=0,sigma=1)
+            a_dow = pm.Normal('alpha_dow',mu=0,sigma=1,shape=len(self.train_data.dow.cat.categories))
 
             # continuous data
             T = pm.MutableData('tempmax',self.train_data.tempmax.to_numpy())

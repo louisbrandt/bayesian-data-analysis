@@ -11,16 +11,15 @@ import aesara.tensor as at
 import xarray as xr
 from bayesian import BayesianModel
 
-class CombinedModel(BayesianModel):
+class Deploy(BayesianModel):
     def __init__(self, n_days, n_lags):
         cat_cols = ['precip']
         num_cols = ['tempmax']
         self.n_lags = n_lags
         self.time_series_flag = True
-        super().__init__(name='CombinedModel', n_days=n_days, cat_cols=cat_cols, num_cols=num_cols)
+        super().__init__(name='DeploymentModel', n_days=n_days, cat_cols=cat_cols, num_cols=num_cols)
 
-    def add_lags(self, train_data, valid_data, test_data):
-        d = pd.concat([train_data, valid_data, test_data],ignore_index=True)
+    def add_lags(self,d):
         lagged_dataframes = []
         for lag in range(1, self.n_lags + 1):
             lagged_revenue = d['revenue'].shift(lag)
@@ -32,20 +31,16 @@ class CombinedModel(BayesianModel):
             lagged_dataframes.append(lagged_revenue_diff)
         data = pd.concat([d] + lagged_dataframes, axis=1)
         data = data.dropna() 
-        test = data[-21:]
-        valid = data[-42:-21]
-        train = data[:-42]
-        return train.reset_index(drop=True), valid.reset_index(drop=True), test.reset_index(drop=True)
+        test = data[-8:]
+        train = data[:-2]
+        return train.reset_index(drop=True), test.reset_index(drop=True)
 
     def set_data(self):
-        train_data = pd.read_csv('/Users/louisbrandt/itu/6/bachelor/data/processed/train.csv')
-        valid_data = pd.read_csv('/Users/louisbrandt/itu/6/bachelor/data/processed/valid.csv')
-        test_data = pd.read_csv('/Users/louisbrandt/itu/6/bachelor/data/processed/test.csv')
+        data = pd.read_csv('/Users/louisbrandt/itu/6/bachelor/data/deploy/processed_data.csv')
 
-        self.train_data, self.valid_data, self.test_data = self.add_lags(train_data, valid_data, test_data)
+        self.train_data, self.test_data = self.add_lags(data)
 
         self.train_data = self.train_data.astype({col: 'category' for col in self.cat_cols})
-        self.valid_data = self.valid_data.astype({col: 'category' for col in self.cat_cols})
         self.test_data = self.test_data.astype({col: 'category' for col in self.cat_cols})
 
         self.train_data = self.train_data[-self.n_days:]
@@ -112,6 +107,7 @@ class CombinedModel(BayesianModel):
                 for i in range(1, revenue_predictions.shape[1]):
                     # print the prediction of revenue to screen 
                     revenue_predictions[:, i] = revenue_predictions[:,i - 1].mean() + flat_predictions[:, i]
+                    print(f"Predicted revenue for day {i}: {revenue_predictions[:, i].mean()}\n plus {flat_predictions[:, i].mean()}")
             else:
                 for i in range(1, revenue_predictions.shape[1]):
                     # print the prediction of revenue to screen 
@@ -120,3 +116,40 @@ class CombinedModel(BayesianModel):
 
         print(f"[DONE] {self.name} test samples generated from predictive distribution ")
         return flat_predictions
+
+
+    def test(self,save=True,show=False,multiday=False):
+        print(f"[TASK] {self.name} testing model")
+
+        # get prediction
+        test_predictions = self.generate_predictions(data=self.test_data,multiday=multiday)
+        fig = self.plot_predictions(self.test_data,test_predictions,true_values=False, ci=0.95)
+        if save:
+            plt.savefig(self.eval_path+'test/predictions.png')
+            print(f"[DONE] {self.name} saved test plot to file {self.eval_path}test/predictions.png")
+        if show:
+            plt.show()
+        plt.close()
+
+        # write test_predictions
+        prediction_df = self.test_data[['date','revenue']].copy()
+        prediction_df['revenue_prediction'] = test_predictions.mean(axis=0)
+        prediction_df = self.unnormalise_data(prediction_df)
+        if save:
+            prediction_df.to_csv(self.eval_path+'test/predictions.csv',index=False)
+            print(f"[DONE] {self.name} saved test predictions to file {self.eval_path}test/predictions.csv")
+
+    def unnormalise_data(self,df):
+        # load globals
+        with open('/Users/louisbrandt/itu/6/bachelor/data/deploy/globals.csv','r') as f:
+            data = f.read()
+            data = data.split(',')
+            Y_MEAN = float(data[0])
+            Y_STD = float(data[1])
+        
+        # unnormalise data
+        df['revenue_prediction'] = df['revenue_prediction'] * Y_STD + Y_MEAN
+        return df
+
+    def validate(self):
+        return

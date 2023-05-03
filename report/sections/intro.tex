@@ -1,47 +1,122 @@
 \section{Introduction}
 
-% What is Bayesian Data Analysis?
-Alternative reasoning of model parameter approximation of a statistical model.
+% ------------------- Introduce Bayes --------------------------
 
-Asking a more intuitive question than frequentist methods.
-Frequentist: Given the underlying trend, what are the chances of observing the data?
-Bayesian: Fixing on the observed data and deciding how to update our beliefs about the model parameters.
+Accurate revenue forecasting plays a pivotal role in the success of businesses,
+aiding in efficient resource allocation, planning, and well-informed
+decision-making. In this study, we delve into the application of Bayesian
+models for predicting daily revenue at Copenhagen based poke bowl chain called
+OLIOLI. By comparing the performance of various Bayesian models and evaluating
+their usefulness, we aim to provide insights into the advantages and
+limitations of these methods in a real-world context, and contribute to the
+ongoing research in the field of Bayesian data analysis.
+% Intuitive questions: Fixing observed data and updating beliefs about model parameters
+Bayesian modeling, grounded in the principles of Bayes' theorem, provides an
+alternative to the classic frequentist approach in data analysis and modeling.
+In contrast to frequentist methods, which aim to estimate how likely observing
+specific data is under the assumption of fixed model parameters, Bayesian
+modeling is concerned with updating our beliefs about the model parameters
+based on the data we observe. The key shift in conditioning on the data
+instead of the model allows Bayesian methods to incorporate prior knowledge and
+facilitate a more intuitive understanding of uncertainty, which can be
+particularly useful for tackling complex real-world challenges.
+% Handling uncertainty 
+In practice, the prior belief is represented by a probability distribution over
+the model parameters, which is updated to a posterior distribution after
+observing data. This posterior distribution is then used to make predictions
+and inferences about the model parameters. By their nature, probability
+distributions are well suited to represent uncertainty 
+% Model comparison and selection
+% Additionally, the Bayesian method provides a principled framework for the comparison 
+% and selection of different models. The best model for a problem is assumed to be 
+% the most simple model able to explain the observed data and bayesian comparison methods 
+% discussed in this paper provide a way to quantify this simplicity.
 
--- Define the problem
-Common problem setting: Predicting total revenue on a daily basis The modelling
-real world phenomena is infitiely complex: The revenue generated is a compound
-of indiviudal human decisions Decisions need to be made about what we care
-about enough to model, as well as how to control for factors outside the model
-that may affect the outcome. Great setting for the evaluating the assumptions
-and results of a model.
-How to choose variables of interest?
-Expert opinion, domain knowledge, time series analysis?
+% ------------------- Define the problem --------------------------
+% Daily revenue prediction
+One area where modelling uncertainty is helpful is in revenue prediction and forecasting. 
+This paper focuses on a case study to illustrate the application of Bayesian methods
+and how the various decisions at steps of processing, modelling and comparison propegate 
+to the final model and its predictions.
+% Real-world phenomena complexity
+When modelling real-world phenomena, the complexity of the problem can make it difficult 
+to find a useful model - accurate and interpretable - and is therefore an exciting domain 
+to test and evaluate theoretical methods.
+% Revenue as a compound of individual human decisions
+The revenue of a store is a compound of an immeasurable number individual human
+decisions, which makes choosing the relavent, measurable variables of interest
+a challenge. 
+% Deciding on variables of interest: Expert opinion, domain knowledge, time series analysis
+Here, we are guided by experts and their domain knowledge, who
+have long been aware of the various temporal factors that influence revenue -
+and what daily, weekly, and seasonal patterns mean for the business. The
+weather thought to be another source of variablility throughout OLIOLI and it
+was this that motivated the study of various weather phenomena on revenue.
 
--- Approaches
-Time series
-Machine learning
-Bayesian - what does it offer?
-  Handling of Uncertainty: 
-  Handling of Data: Bayesian methods can be beneficial
-  when dealing with limited, noisy, or incomplete data, as they allow for the
-  incorporation of prior knowledge to help inform model parameters. 
-  Model Comparison and Selection:
+% ------------------- Approaches to the problem -------------------
 
--- Bayesian Data Analysis
-What is the priority? 
-Accuracy of prediction, understanding the underlying process, modelling uncertainty
+The problem of revenue forecasting is not a new one and there exist a number of
+different approaches to time-sensitive prediciton, each with their own
+subtleties to consider.
+% Statistical modelling 
+Traditional statistical modelling techniques are widely used to identify trends
+and relationships between variables and make predictons and we will discuss how
+Bayesian methods are a flexible extension of some of these methods. 
+% Time series models
+Working with time dependent data, time series models are a natural choice and
+are widely used in industry for problems similar to the one this paper
+addresses. Auto-regressive models, Moving Average models and everything in
+between are some examples of time series which take a different approach to
+modelling temporal data.
+% Machine learning methods
+Machine learning methods continue to grow in popularity, the applications of
+which extend to a myriad of problems, no doubt including this one. The nature
+of this problem prioritises interpretability over predictive power, which is
+why we will not be comparing the specific implementations of these methods.
+Nevertheless, the general principles of machine learning are worth mentioning
+and recognising as a potential alternative to the methods discussed in this
+paper.
+% Bayesian approach: Advantages and challenges
+And Bayesian modelling, the chosen tool central to this paper, can have a
+number of benefits, such as the capacity to account for past knowledge,
+quantify uncertainty, and automatically update the model when new data become
+available. However, Bayesian methods can be computationally taxing,
+particularly for large datasets and intricate models, and they might
+necessitate a careful examination of prior distributions and presumptions.
+% ------------------ Research Questions ----------------------------
 
-What is the data? 
+In light of these approaches, the research questions that will be addressed in this paper are:
 
-What is the optimal data to fit the model?
+\begin{enumerate}
+    \item What is the best performing Bayesian model for predicting daily revenue for OLIOLI with weather data?
+    \item What is the optimal data volume for optimal revenue prediction?
+    \item What are the assumptions and compromises of different models, and how do they impact the performance and the interpretability of the results?
+\end{enumerate}
 
-What is the ideal model 
+% ---------- Testing, evaluation, Bayesian comparison ------------
 
-How do we know what the ideal model is ?
+% Using real-world sales data for the case study
+% Selection of the optimal model and data for specific problems
+% Context-dependent decision-making
+To answer these questions, we will test, compare and evaluate multiple Bayesian
+models and evaluation metrics, using real-world sales data from OLIOLI. Current
+research in the field exists for motivating the deployment of Bayesian models,
+with methodologies existing for their evaluation and comparison. Despite this,
+the exact process for selecting the optimal model and data for a specific
+problem remains unclear and context-dependent.
 
-What is the potential?
-Accurate forecasting means better decision making, and more efficient use of resources.
-Hierarchical extension 
 
+% ------------------ Contributions -------------------------------
 
-
+% Thorough testing, evaluation, and comparison of different assumptions in Bayesian data analysis
+% Focus on revenue prediction for a restaurant chain
+% Potential for accurate forecasting, better decision-making, and efficient resource allocation
+The contributions of this paper are manifold, providing a comprehensive
+testing, evaluation, and comparison of the different assumptions within the
+realm of Bayesian data analysis; through the vessel of the mentioned case
+study. By investigating the research questions and evaluating the performance
+of various Bayesian models, this study aims to not only demonstrate the
+potential for accurate forecasting but also emphasise the potential benefit of
+informed decision-making and efficient resource allocation in a business
+context.
+% Hierarchical extension possibilities

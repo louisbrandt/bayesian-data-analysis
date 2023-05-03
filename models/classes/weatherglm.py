@@ -59,7 +59,7 @@ class WeatherGLM(BayesianModel):
             R = pm.MutableData("revenue", self.train_data.revenue.to_numpy())
 
             # combine the regression coefficients and variables into the linear regression equation for the mean of the likelihood function
-            mu = pm.Deterministic('mu',b + a_t * T + a_h * H + a_c * C + a_w * W + a_p[P] + a_dow[Dow] + a_d[D] + a_m[M] + a_y[Y] + a_n[N])
+            mu = pm.Deterministic('mu', b + a_t * T + a_h * H + a_c * C + a_w * W + a_p[P] + a_dow[Dow] + a_d[D] + a_m[M] + a_y[Y] + a_n[N])
 
             # define likelihood
             # nu = pm.Exponential("nu", lam=1/5)
