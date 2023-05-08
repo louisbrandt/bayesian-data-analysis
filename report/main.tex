@@ -2,6 +2,7 @@
 
 % imports
 \usepackage[margin=1in]{geometry}
+\usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{listings}
@@ -9,17 +10,21 @@
 \usepackage{amsmath} % split environment
 \usepackage{booktabs} % \toprule, \midrule, and \bottomrule commands,
 \usepackage{array} % for \arraybackslash
+\usepackage{calc}
+\usepackage{tabularx}
 
 % begin document
 \begin{document}
 
-\title{Bayesian Data Analysis on Real World Data}
-\author{Louis Brandt}
-\date{May 2023}
-\maketitle
+% title
+\input{sections/title}
+
+% table of contents
+\tableofcontents
+\newpage
 
 % abstract
-\input{sections/abstract}
+% \input{sections/abstract}
 
 % introduction
 \input{sections/intro}
@@ -42,9 +47,10 @@
 % conclusion
 %\input{sections/conclusion}
 
+\newpage
 % references
 % including the bibliography with natbib 
-\bibliographystyle{plainnat}
 \bibliography{references}
+\bibliographystyle{plain}
 
 \end{document}

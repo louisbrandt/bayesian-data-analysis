@@ -28,7 +28,7 @@ The data set contains 1209 observations, each representing a day and the followi
       \caption{Variable Source}
       \label{fig:vars1}
       \begin{tabular}{l}
-          \hline 
+          \toprule 
           \textbf{Weather variables} \\
           \quad\textit{Temperature} \\
           \quad\textit{Precipitation} \\
@@ -43,7 +43,7 @@ The data set contains 1209 observations, each representing a day and the followi
           \textbf{Revenue variables} \\
           \quad\textit{Revenue} \\
           \quad\textit{Number of stores open} \\[0.3em]
-          \hline
+          \bottomrule
       \end{tabular}
     \end{subfigure}%
     \begin{subfigure}{0.5\textwidth}
@@ -51,7 +51,7 @@ The data set contains 1209 observations, each representing a day and the followi
       \caption{Variables in Model}
       \label{fig:vars2}
       \begin{tabular}{l}
-          \hline 
+          \toprule 
           \textbf{Continuous variables} \\
           \quad\textit{Temperature} \\
           \quad\textit{Wind speed} \\
@@ -65,7 +65,7 @@ The data set contains 1209 observations, each representing a day and the followi
           \quad\textit{Month} \\
           \quad\textit{Year} \\
           \quad\textit{Number of stores open} \\[0.3em]
-          \hline
+          \bottomrule
       \end{tabular}
     \end{subfigure}%
     \caption{Variables}
@@ -97,7 +97,9 @@ not pursued.
 Standardisation can be an important preprocessing step in Bayesian modelling,
 as it assures that variables are on a comparable scale, enabling more efficient
 sampling resulting in a more stable posterior. \cite{gelman2013philosophy}
-
+In his paper \cite{gelman2004parameterization}, Gelman demonstrates how
+reparameterization, including standardisation, can enhance the efficiency of
+the sampling process in Bayesian models \cite{gelman2004parameterization}.
 Continuous variables are normalised by scaling them to have a mean of 0 and a
 standard deviation of 1, like so.
 
@@ -288,19 +290,36 @@ temperature, humidity, wind speed, and cloud cover.
 \end{table}
 
 \subsection{Data Split}
-The data split depends on the specific research question we aim to address. In
-our case, the primary goal is to accurately forecast future revenues rather
-than solely explaining past data, which is a similar yet slightly different
-question: our focus lies on forecasting revenue for a period of three weeks.
-To achieve this, we partition the data into training, validation, and test
-sets. The training set covers the period from \texttt{2020-01-01} to \texttt{2023-03-12} and is
-used to develop the model. The validation set, spanning from \texttt{2023-03-13} to
-\texttt{2023-04-02}, allows for model selection and tuning. Finally, the test set,
-ranging from \texttt{2023-04-03} to \texttt{2023-04-24}, is utilized to assess
-the final model's performance on unseen data. Using a 3-week window for
-validation and testing is a somewhat arbitrary choice, but in the real-world
-financial and operational decisions commonly look 2-4 weeks into the future, so
-a 3-week window is a reasonable choice, and short enough to minimise severe
-uncertainty propegation. This data splitting strategy ensures that the model's
-predictive ability is fairly evaluated and can be optimized for forecasting future
-revenue.
+The data split strategy employed in this study hinges on the specific research
+question we aim to address. The primary objective is to accurately forecast
+future revenues, with a focus on predicting revenue for a three-week period. In
+light of this, the data is partitioned into training, validation, and test
+sets.
+
+The training set, spanning from \texttt{2020-01-01} to \texttt{2023-03-12},
+serves to develop the model. The validation set, covering \texttt{2023-03-13}
+to \texttt{2023-04-02}, facilitates model selection and tuning. Lastly, the
+test set, ranging from \texttt{2023-04-03} to \texttt{2023-04-24}, assesses the
+final model's performance on unseen data. Employing a three-week window for
+validation and testing is a pragmatic choice, as real-world financial and
+operational decisions often involve planning two-to-four weeks into the future.
+This data split strategy ensures a fair evaluation of the model's predictive
+ability, optimising it for future revenue forecasting.
+
+Although Bayesian modelling inherently incorporates data into the model through
+the likelihood function and lacks a separate 'out-of-sample', adopting a data
+split strategy remains valuable. It provides a transparent and robust
+assessment of the models' ability to generalise to new data, essential for
+practical applications. Furthermore, it enables a fair comparison between
+models, as they are all evaluated on the same held-out test set, allowing for a
+more accurate assessment of their performance. Finally, the data split strategy
+helps identify potential overfitting in the Bayesian context by evaluating the
+models' performance on validation and test sets.
+
+Given these considerations, implementing a data split strategy in this Bayesian
+study is a valuable approach. It ensures a comprehensive evaluation of the
+models' out-of-sample predictive accuracy and performance on different subsets
+of data, enabling a robust assessment of the models' ability to predict the
+restaurant chain's revenue. Coupling this data split strategy with Bayesian
+model comparison techniques offers a thorough and reliable framework for model
+evaluation and selection.

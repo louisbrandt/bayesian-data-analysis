@@ -36,8 +36,9 @@ class WeatherGLMv2(BayesianModel):
             # a_c = pm.Normal("alpha_cloud", mu=0, sigma=1)
             # a_w = pm.Normal("alpha_wind", mu=0, sigma=1)
 
-            a_p = pm.Normal("alpha_precip", mu=0, sigma=1,shape=len(self.train_data.precip.cat.categories))
-            a_dow = pm.Normal("alpha_dow", mu=0, sigma=1,shape=len(self.train_data.dow.cat.categories))
+            a_p = pm.Normal("alpha_precip", mu=[1,0,-1], sigma=1,shape=len(self.train_data.precip.cat.categories))
+            dow_means = np.array([-1, 0, 1, 1, 1, 0, -1]) 
+            a_dow = pm.Normal('alpha_dow',mu=dow_means,sigma=1,shape=len(self.train_data.dow.cat.categories))
             # a_d = pm.Normal("alpha_day", mu=0, sigma=1,shape=len(self.train_data.day.cat.categories))
             a_m = pm.Normal("alpha_month", mu=0, sigma=1,shape=len(self.train_data.month.cat.categories))
             a_y = pm.Normal("alpha_year", mu=0, sigma=1,shape=len(self.train_data.year.cat.categories))

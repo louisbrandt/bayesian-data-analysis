@@ -4,15 +4,16 @@ import argparse
 import pandas as pd
 import arviz as az
 from simple_temp import SimpleTempModel
+from simple_tempv2 import SimpleTempModelv2
 from weatherglm import WeatherGLM
 from weatherglmv2 import WeatherGLMv2
 from laggedar import LaggedARModel
-from combinedmodel import CombinedModel
+from combinedmodel import HybridModel
 from deploy import Deploy
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Bayesian workflow.')
-    parser.add_argument('model', type=str, help='Model to use', choices=['weatherglm','weatherglmv2','simpletemp','laggedar','combinedmodel','deploy'])
+    parser.add_argument('model', type=str, help='Model to use', choices=['weatherglm','weatherglmv2','simpletemp','simpletempv2','laggedar','hybridmodel','deploy'])
     parser.add_argument('--n_lags', type=int, default=7, help='Number of lags to use in AR models')
     parser.add_argument('--n_days', type=int, default=90, help='Number of last days of data to use')
     parser.add_argument('--n_test_days', type=int, default=21, help='Number of test days')
@@ -37,11 +38,14 @@ def get_model_class_and_params(args):
     elif args.model == 'simpletemp':
         model_class = SimpleTempModel
         model_params = {'n_days': args.n_days}
+    elif args.model == 'simpletempv2':
+        model_class = SimpleTempModelv2
+        model_params = {'n_days': args.n_days}
     elif args.model == 'laggedar':
         model_class = LaggedARModel
         model_params = {'n_days': args.n_days,'n_lags': args.n_lags}
-    elif args.model == 'combinedmodel':
-        model_class = CombinedModel
+    elif args.model == 'hybridmodel':
+        model_class = HybridModel
         model_params = {'n_days': args.n_days,'n_lags': args.n_lags}
     elif args.model == 'deploy':
         model_class = Deploy
@@ -70,7 +74,9 @@ def main():
         model.summary()
 
     # --- plot trace
-        model.plot_trace()
+        # get all varnames
+        var_names = [var.name for var in model.model.free_RVs if not var.name.startswith('mu')]
+        model.plot_trace(var_names=var_names)
         
     # --- ppc
         model.generate_ppc()

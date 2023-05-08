@@ -11,13 +11,13 @@ import aesara.tensor as at
 import xarray as xr
 from bayesian import BayesianModel
 
-class CombinedModel(BayesianModel):
+class HybridModel(BayesianModel):
     def __init__(self, n_days, n_lags):
         cat_cols = ['precip']
         num_cols = ['tempmax']
         self.n_lags = n_lags
         self.time_series_flag = True
-        super().__init__(name='CombinedModel', n_days=n_days, cat_cols=cat_cols, num_cols=num_cols)
+        super().__init__(name='HybridModel', n_days=n_days, cat_cols=cat_cols, num_cols=num_cols)
 
     def add_lags(self, train_data, valid_data, test_data):
         d = pd.concat([train_data, valid_data, test_data],ignore_index=True)

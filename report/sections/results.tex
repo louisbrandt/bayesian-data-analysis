@@ -13,19 +13,33 @@ introduction, LOO validation \& WAIC.
 
 \subsection{Model Comparison}
 
-In the Bayesian realm, observations fitted to models are part of the model,
-dictating both the confidence in, and the shape of the posterior through the
-likelihood function. The result of this is an assumption that models compared
-with each other are fitted on the set of observations, modelling the same 
-generative process. Much of the deliberation throughout this project has been 
-concerned with the precise selection of data to fit a model on, as well as 
-the choice of model itself; but I hope you are starting to see how these two
-decisions are one and the same.
+The primary research question of this study is to determine the best-performing
+model for the case study, predicting the restaurant chain's revenue. In the
+Bayesian framework, both the choice of data to fit a model and the model itself
+are intertwined. The observations are integral in shaping the posterior
+distribution through the likelihood function, so the model and the inferred
+posterior of the model parameters do not exist separately from the data.
+With many plausible models fit on the same data, the question of which model is
+best can be answered by applying Bayesian model comparison techniques, as
+described in \cite{statrethinking} Chapter 7.5. The seamless application of
+this comparison and selection is an attractive facet of working within the
+Bayesian system.
+However, the volume of data itself is also a core subject of this paper and
+case study. To compare models fit on different subsets of the data, we can
+borrow ideas from frequentist approaches like mean squared error (MSE) and mean
+absolute error (MAE).
+In the Bayesian context, we can assess the out-of-sample predictive accuracy of
+the models, even though Bayesian models do not have a separate 'out-of-sample'
+by definition. Techniques such as cross-validation or information criteria
+(e.g., WAIC and LOO-CV) can approximate the out-of-sample predictive accuracy
+without explicitly holding out data during the modeling process.
 
-% Prediction evaluation 
-Research question is best performing model for the case study: which is predicting revenue
-for restaurant chain, so how can we decide which model is the best at predicting revenue. 
-We can see which model predicts best on unseen data, mimicing the real world. 
-To answer this, we can a few question: how close does the model predict to the actual value?
-how well does the model explain the true data? how well does the model predict future data?
+To identify the best model, we can examine its predictive performance on unseen
+data, mimicking real-world scenarios. To do this, we can address the following
+questions: How close does the model predict the actual value? How well does the
+model explain the true data? And how well does the model predict future data?
 
+By evaluating the models using both Bayesian model comparison techniques and
+frequentist measures of performance on different subsets of data, we can
+effectively determine which model best predicts the restaurant chain's revenue
+and addresses the primary research question of this study.

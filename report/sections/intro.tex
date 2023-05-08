@@ -11,15 +11,11 @@ their usefulness, we aim to provide insights into the advantages and
 limitations of these methods in a real-world context, and contribute to the
 ongoing research in the field of Bayesian data analysis.
 % Intuitive questions: Fixing observed data and updating beliefs about model parameters
-Bayesian modeling, grounded in the principles of Bayes' theorem, provides an
+Grounded in the principles of Bayes' theorem, Bayesian modeling provides an
 alternative to the classic frequentist approach in data analysis and modeling.
-In contrast to frequentist methods, which aim to estimate how likely observing
-specific data is under the assumption of fixed model parameters, Bayesian
-modeling is concerned with updating our beliefs about the model parameters
-based on the data we observe. The key shift in conditioning on the data
-instead of the model allows Bayesian methods to incorporate prior knowledge and
-facilitate a more intuitive understanding of uncertainty, which can be
-particularly useful for tackling complex real-world challenges.
+Bayesian methods incorporate prior knowledge and facilitate a more intuitive
+understanding of uncertainty, which can be particularly useful for tackling
+complex real-world challenges.
 % Handling uncertainty 
 In practice, the prior belief is represented by a probability distribution over
 the model parameters, which is updated to a posterior distribution after
@@ -53,36 +49,6 @@ and what daily, weekly, and seasonal patterns mean for the business. The
 weather thought to be another source of variablility throughout OLIOLI and it
 was this that motivated the study of various weather phenomena on revenue.
 
-% ------------------- Approaches to the problem -------------------
-
-The problem of revenue forecasting is not a new one and there exist a number of
-different approaches to time-sensitive prediciton, each with their own
-subtleties to consider.
-% Statistical modelling 
-Traditional statistical modelling techniques are widely used to identify trends
-and relationships between variables and make predictons and we will discuss how
-Bayesian methods are a flexible extension of some of these methods. 
-% Time series models
-Working with time dependent data, time series models are a natural choice and
-are widely used in industry for problems similar to the one this paper
-addresses. Auto-regressive models, Moving Average models and everything in
-between are some examples of time series which take a different approach to
-modelling temporal data.
-% Machine learning methods
-Machine learning methods continue to grow in popularity, the applications of
-which extend to a myriad of problems, no doubt including this one. The nature
-of this problem prioritises interpretability over predictive power, which is
-why we will not be comparing the specific implementations of these methods.
-Nevertheless, the general principles of machine learning are worth mentioning
-and recognising as a potential alternative to the methods discussed in this
-paper.
-% Bayesian approach: Advantages and challenges
-And Bayesian modelling, the chosen tool central to this paper, can have a
-number of benefits, such as the capacity to account for past knowledge,
-quantify uncertainty, and automatically update the model when new data become
-available. However, Bayesian methods can be computationally taxing,
-particularly for large datasets and intricate models, and they might
-necessitate a careful examination of prior distributions and presumptions.
 % ------------------ Research Questions ----------------------------
 
 In light of these approaches, the research questions that will be addressed in this paper are:
@@ -105,6 +71,15 @@ with methodologies existing for their evaluation and comparison. Despite this,
 the exact process for selecting the optimal model and data for a specific
 problem remains unclear and context-dependent.
 
+This paper consists of five further sections. First, background theory is
+introduced aimed to provide a foundation of knowledge from which the Bayesian
+analysis of the case study can be understood. Second, the case study is
+introduced and the data is investigated. Third, the methodology motivates and
+describes the models, as well as reflecting on the initial predictive
+performance of the various approaches applied to the case study. Fourth, the
+results are fully presented, discussed and the Bayesian models are compared.
+Finally, the paper is concluded with a summary of the findings and a discussion
+of the limitations and future work of the study.
 
 % ------------------ Contributions -------------------------------
 

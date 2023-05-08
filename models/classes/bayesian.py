@@ -121,10 +121,11 @@ class BayesianModel():
 
         # Plot a histogram of the predicted revenue values
         fig, ax = plt.subplots()
-        plt.hist(target_preds, bins=50, density=True)
+        plt.hist(target_preds, bins=100, density=True)
         plt.xlabel('Predicted revenue')
         plt.ylabel('Density')
-        plt.title('Prior predictive distribution of revenue')
+        # add vertical line at mean 
+        plt.axvline(target_preds.mean(), color='r', linestyle='--')
         if save:
             plt.savefig(self.eval_path+'prior_predictive.png')
             print(f"[DONE] {self.name} saved prior predictive to file {self.eval_path}prior_predictive.png")
@@ -269,7 +270,6 @@ class BayesianModel():
             # add a vertical line for the mean
             plt.vlines(prediction_data.revenue.mean(), *plt.gca().get_ylim(),color=TRUE_COLOR,linestyle='--')
 
-        plt.title('Posterior Predictive Distribution on Test')
         plt.legend(loc='upper left', framealpha=1)
         
         return fig
@@ -356,7 +356,7 @@ class BayesianModel():
             'MAE': {'mean': np.mean(mae), 'std': np.std(mae)},
             'MSE': {'mean': np.mean(mse), 'std': np.std(mse)},
             'RMSE': {'mean': np.mean(rmse), 'std': np.std(rmse)},
-            'Log-likelihood': log_likelihood,
+            'LPD': log_likelihood,
             'MAD': mad
         }
 
