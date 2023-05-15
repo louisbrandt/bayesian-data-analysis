@@ -32,7 +32,7 @@ class Deploy(BayesianModel):
         data = pd.concat([d] + lagged_dataframes, axis=1)
         data = data.dropna() 
         test = data[-8:]
-        train = data[:-2]
+        train = data[:-8]
         return train.reset_index(drop=True), test.reset_index(drop=True)
 
     def set_data(self):
@@ -123,7 +123,7 @@ class Deploy(BayesianModel):
 
         # get prediction
         test_predictions = self.generate_predictions(data=self.test_data,multiday=multiday)
-        fig = self.plot_predictions(self.test_data,test_predictions,true_values=False, ci=0.95)
+        fig = self.plot_predictions(self.test_data,test_predictions,true_values=True, ci=0.95)
         if save:
             plt.savefig(self.eval_path+'test/predictions.png')
             print(f"[DONE] {self.name} saved test plot to file {self.eval_path}test/predictions.png")
@@ -148,7 +148,8 @@ class Deploy(BayesianModel):
             Y_STD = float(data[1])
         
         # unnormalise data
-        df['revenue_prediction'] = df['revenue_prediction'] * Y_STD + Y_MEAN
+        df['revenue_prediction_non_standard'] = df['revenue_prediction'] * Y_STD + Y_MEAN
+        df['revenue_non_standard'] = df['revenue'] * Y_STD + Y_MEAN
         return df
 
     def validate(self):

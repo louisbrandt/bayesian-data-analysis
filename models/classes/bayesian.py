@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import aesara.tensor as at
 import xarray as xr
 from scipy.stats import gaussian_kde
+from scipy.stats import wasserstein_distance
 
 # ----------- Parent Class ------------- #
 class BayesianModel():
@@ -121,7 +122,7 @@ class BayesianModel():
 
         # Plot a histogram of the predicted revenue values
         fig, ax = plt.subplots()
-        plt.hist(target_preds, bins=100, density=True)
+        plt.hist(target_preds, bins=50, density=True)
         plt.xlabel('Predicted revenue')
         plt.ylabel('Density')
         # add vertical line at mean 
@@ -184,7 +185,7 @@ class BayesianModel():
         TRUE_COLOR = 'k'
         ACCENT = 'orange'
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(15,10))
         
         date_range = pd.date_range(prediction_data.date.min(), periods=len(prediction_data), freq='D')
 
@@ -211,6 +212,9 @@ class BayesianModel():
         # plt.axvline(pd.to_datetime(self.test_data.date.min()), c='k', linestyle='--', alpha=0.3)
         # add text to indicate the end of the training data
         # plt.text(pd.to_datetime(self.test_data.date.min()), ax.get_ylim()[1]*0.7, 'Test Start', rotation=90, alpha=0.5)
+        # label axis
+        plt.xlabel('Date')
+        plt.ylabel('Norm. Revenue')
 
         plt.legend()
         return fig
@@ -351,14 +355,28 @@ class BayesianModel():
             log_likelihoods[i] = stats.norm.logpdf(true_data, loc=predictions[i], scale=np.std(predictions, axis=0)).sum()
         log_likelihood = np.mean(log_likelihoods)
 
+        # EMD 
+        true_mean = true_data
+        true_std = 0.3  # standard deviation x 2 is .95 CI
+        # generate a normal distribution centered at the true value
+        true_distribution = np.random.normal(loc=true_mean, scale=true_std, size=predictions.shape)
+        # compute the EMD for each sample
+        emd = np.array([wasserstein_distance(predictions[i], true_distribution[i]) for i in range(predictions.shape[0])])
+        # compute the mean EMD
+        mean_emd = np.mean(emd)
+
         # Calculate the mean and standard deviation of the metrics across all samples
         metrics = {
             'MAE': {'mean': np.mean(mae), 'std': np.std(mae)},
             'MSE': {'mean': np.mean(mse), 'std': np.std(mse)},
-            'RMSE': {'mean': np.mean(rmse), 'std': np.std(rmse)},
+            'RMSE':{'mean': np.mean(rmse), 'std': np.std(rmse)},
             'LPD': log_likelihood,
-            'MAD': mad
+            'MAD': mad,
+            'EMD': mean_emd
         }
+        # print predicted mean and true mean for all samples
+        print(f"Predicted mean: {mean_predictions}")
+        print(f"True mean: {true_mean}")
 
         return metrics
 

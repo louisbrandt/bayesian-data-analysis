@@ -2,96 +2,99 @@
 
 % ------------------- Introduce Bayes --------------------------
 
-Accurate revenue forecasting plays a pivotal role in the success of businesses,
-aiding in efficient resource allocation, planning, and well-informed
-decision-making. In this study, we delve into the application of Bayesian
-models for predicting daily revenue at Copenhagen based poke bowl chain called
-OLIOLI. By comparing the performance of various Bayesian models and evaluating
-their usefulness, we aim to provide insights into the advantages and
-limitations of these methods in a real-world context, and contribute to the
-ongoing research in the field of Bayesian data analysis.
-% Intuitive questions: Fixing observed data and updating beliefs about model parameters
-Grounded in the principles of Bayes' theorem, Bayesian modeling provides an
-alternative to the classic frequentist approach in data analysis and modeling.
-Bayesian methods incorporate prior knowledge and facilitate a more intuitive
-understanding of uncertainty, which can be particularly useful for tackling
-complex real-world challenges.
-% Handling uncertainty 
-In practice, the prior belief is represented by a probability distribution over
-the model parameters, which is updated to a posterior distribution after
-observing data. This posterior distribution is then used to make predictions
-and inferences about the model parameters. By their nature, probability
-distributions are well suited to represent uncertainty 
-% Model comparison and selection
-% Additionally, the Bayesian method provides a principled framework for the comparison 
-% and selection of different models. The best model for a problem is assumed to be 
-% the most simple model able to explain the observed data and bayesian comparison methods 
-% discussed in this paper provide a way to quantify this simplicity.
+Accurate revenue forecasting plays a pivotal role in the success of
+businesses, aiding in well-informed decision-making in many areas, like
+resource allocation and planning. This study delves into applying Bayesian
+models for predicting daily revenue at Copenhagen-based poke bowl chain;
+OLIOLI. The comparison of various Bayesian models and their predictive
+performance provides insights into the advantages and limitations of these
+methods in a real-world context and supports ongoing research in Bayesian data
+analysis and its application in industry.
+
+Grounded in the principles of Bayes' theorem, Bayesian modelling provides an
+alternative to the classic frequentist approach to statistical data analysis
+and modelling. Bayesian methods incorporate prior knowledge and facilitate an
+intuitive understanding of uncertainty. Both approaches can quantify
+uncertainty, but the Bayesian framework inherently incorporates it, while the
+frequentist approach requires additional measures such as p-values or
+confidence intervals \cite{statrethinking}. This intuitive understanding and direct
+representation of uncertainty in Bayesian methods make them particularly useful
+for complex real-world challenges.
 
 % ------------------- Define the problem --------------------------
-% Daily revenue prediction
-One area where modelling uncertainty is helpful is in revenue prediction and forecasting. 
-This paper focuses on a case study to illustrate the application of Bayesian methods
-and how the various decisions at steps of processing, modelling and comparison propegate 
-to the final model and its predictions.
-% Real-world phenomena complexity
-When modelling real-world phenomena, the complexity of the problem can make it difficult 
-to find a useful model - accurate and interpretable - and is therefore an exciting domain 
-to test and evaluate theoretical methods.
-% Revenue as a compound of individual human decisions
-The revenue of a store is a compound of an immeasurable number individual human
-decisions, which makes choosing the relavent, measurable variables of interest
-a challenge. 
-% Deciding on variables of interest: Expert opinion, domain knowledge, time series analysis
-Here, we are guided by experts and their domain knowledge, who
-have long been aware of the various temporal factors that influence revenue -
-and what daily, weekly, and seasonal patterns mean for the business. The
-weather thought to be another source of variablility throughout OLIOLI and it
-was this that motivated the study of various weather phenomena on revenue.
+This study applies Bayesian methods to a case study, illustrating their
+potential for predictive modelling. Additionally, an examination is conducted
+on how decisions made at various stages - from data processing and modelling to
+model comparison - can influence the outcomes.
+
+Selecting relevant, measurable variables for revenue modelling is
+challenging due to the complexity of real-world phenomena. Store revenue,
+for instance, is a composite of countless individual human decisions.
+Therefore, reliance is placed on the domain knowledge of industry experts
+who understand the temporal factors influencing revenue and can interpret
+the daily, weekly, and seasonal patterns that are critical to business
+performance.
+
+One such factor these experts have identified is the weather. This
+study is mainly motivated by the potential of weather phenomena as a
+source of variability in revenue. To investigate this, the impact of various
+weather conditions on revenue is studied, providing an insightful exploration
+of the application of Bayesian methods in a real-world context.
 
 % ------------------ Research Questions ----------------------------
 
-In light of these approaches, the research questions that will be addressed in this paper are:
+In light of these approaches, the research questions that will be addressed in
+this paper are:
 
 \begin{enumerate}
-    \item What is the best performing Bayesian model for predicting daily revenue for OLIOLI with weather data?
-    \item What is the optimal data volume for optimal revenue prediction?
-    \item What are the assumptions and compromises of different models, and how do they impact the performance and the interpretability of the results?
+    \item What is the best-performing Bayesian model for predicting daily
+      revenue for OLIOLI using weather data?
+    \item What is the optimal data volume for model performance in accurate revenue prediction?
+    \item What are the assumptions and compromises of different models, and how
+      do they impact performance and the interpretability of the results?
 \end{enumerate}
 
-% ---------- Testing, evaluation, Bayesian comparison ------------
-
-% Using real-world sales data for the case study
-% Selection of the optimal model and data for specific problems
-% Context-dependent decision-making
-To answer these questions, we will test, compare and evaluate multiple Bayesian
-models and evaluation metrics, using real-world sales data from OLIOLI. Current
-research in the field exists for motivating the deployment of Bayesian models,
-with methodologies existing for their evaluation and comparison. Despite this,
-the exact process for selecting the optimal model and data for a specific
-problem remains unclear and context-dependent.
+Multiple Bayesian models and evaluation metrics will be tested,
+compared, and evaluated to address these questions using real-world
+sales data from OLIOLI. Current research in the field exists for
+motivating the deployment of Bayesian models, with methodologies
+existing for their evaluation and comparison \cite{gelman}
+\cite{statrethinking} \cite{puppies}. Despite this, the exact process
+for selecting the optimal model and data for a specific problem
+remains unclear and context-dependent.
 
 This paper consists of five further sections. First, background theory is
-introduced aimed to provide a foundation of knowledge from which the Bayesian
+introduced to provide a foundation of knowledge from which the Bayesian
 analysis of the case study can be understood. Second, the case study is
-introduced and the data is investigated. Third, the methodology motivates and
-describes the models, as well as reflecting on the initial predictive
-performance of the various approaches applied to the case study. Fourth, the
-results are fully presented, discussed and the Bayesian models are compared.
-Finally, the paper is concluded with a summary of the findings and a discussion
-of the limitations and future work of the study.
+introduced, and the data is investigated. Third, the methodology motivates and
+describes the models while reflecting on the initial predictive performance of
+the various approaches applied to the case study. Fourth, the results are fully
+presented, discussed, and the Bayesian models are compared. Finally, the paper
+concludes with a summary of the findings and a discussion of the limitations
+and future work of the study.
 
 % ------------------ Contributions -------------------------------
 
 % Thorough testing, evaluation, and comparison of different assumptions in Bayesian data analysis
 % Focus on revenue prediction for a restaurant chain
 % Potential for accurate forecasting, better decision-making, and efficient resource allocation
-The contributions of this paper are manifold, providing a comprehensive
-testing, evaluation, and comparison of the different assumptions within the
-realm of Bayesian data analysis; through the vessel of the mentioned case
-study. By investigating the research questions and evaluating the performance
-of various Bayesian models, this study aims to not only demonstrate the
-potential for accurate forecasting but also emphasise the potential benefit of
-informed decision-making and efficient resource allocation in a business
-context.
+% The contributions of this paper are manifold, providing a comprehensive
+% testing, evaluation, and comparison of the different assumptions within the
+% realm of Bayesian data analysis; through the vessel of the mentioned case
+% study. By investigating the research questions and evaluating the performance
+% of various Bayesian models, this study aims to not only demonstrate the
+% potential for accurate forecasting but also emphasise the potential benefit of
+% informed decision-making and efficient resource allocation in a business
+% context.
 % Hierarchical extension possibilities
+The contributions of this paper include the following:
+\begin{itemize}
+  \item Comprehensive testing, evaluation, and comparison of different
+    Bayesian models in the context of revenue forecasting using real-world
+    data. 
+  \item An in-depth exploration of the assumptions inherent to Bayesian data
+    analysis and their impact on model performance. 
+  \item Demonstrating the potential for accurate forecasting through
+    Bayesian methods, which can have significant implications for business
+    decision-making and resource allocation.
+\end{itemize}

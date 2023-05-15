@@ -1,0 +1,80 @@
+\section{Conclusion}
+
+\subsection{Limitations and Future Work}
+The application of Bayesian Data Analysis in this study is an initial
+exploration into the potential of Bayesian models in this case study. While the
+models are informative, there were limitations to the study that should be
+addressed in future work, the models to be more useful in industry.
+
+Section \ref{subsec:missing-values} describes interpolation techniques to fill
+in missing values in the data. Information is lost here; while interpolation
+means the surrounding trend is preserved, reasoning explaining the
+uncharacteristically low revenue is not offered. OLIOLI has had days of low
+and no revenue and will again in the future, so being able to capture this
+would give the models a more complete picture of the data. Flags for days of
+interest, such as public holidays, would be an excellent way to capture this
+information.
+
+The Bayesian linear regression models struggled to predict accurately without
+modelling the data as a time series, especially when given more historical
+data. A possible explanation is a change in the underlying generative
+process; the non-stationarity of the data. This aspect may explain some of
+their underperformance. 
+
+Whatever the angle, the task of modelling daily revenue in the real world is
+difficult, due to the sheer number of factors that influence it. Weather and
+calendar events are just two of these factors, and access to data for more
+variables may result in a more accurate model of the underlying
+revenue-generating process. Reducing the resolution of the data from daily to
+hourly temperature and revenue updates may also be a way to improve the model.
+However, this approach was not possible with the data available.
+
+Being inherently uncertain, modelling uncertainty in the weather data itself
+could be helpful, especially for multiday forecasting, allowing predictions to
+reflect another source of uncertainty. This could be done by defining the
+weather data as a random variable in the model.
+
+Future studies may explore the optimal balance between data volume and
+computational efficiency in more detail, especially as models become more
+complicated and more features are added.
+
+It would be valid to argue that there is a fundamental imprecision in the
+modelling process. For example, the total revenue of a given day for the
+company is determined by the total revenue for each store on that day. It is
+possible that not modelling this relationship set a ceiling on the highest
+possible accuracy of the model and was the primary reason behind the data's
+non-stationarity. While modelling this relationship as a hierarchical model is
+possible and encouraged by the Bayesian framework, \cite{statrethinking}
+chapter 13, the required data pre-processing and model specification was beyond
+the scope of this paper.
+
+The hierarchical extension of the Bayesian linear regression and time-series
+models to model the total revenue per store per day would give a more nuanced,
+usable and interpretable insight into revenue for financial forecasting and
+operational planning. 
+In addition, the price of the product set by the company is also thought to
+influence the revenue heavily. Incorporating this in a hierarchical
+structure of models would open the door to other interesting modelling
+approaches.
+\subsection{Summary}
+The present study explored various Bayesian models, including linear regression
+and time-series models, for predicting daily revenue at OLIOLI, a
+Copenhagen-based poke bowl chain. The investigation was motivated by industry
+hypotheses suggesting a potential causal relationship between weather
+conditions and revenue. This led to incorporating weather predictors in the
+models, specifically temperature and precipitation. The results showed that
+while larger data volumes and more autoregressive lags generally enhance model
+performance, the addition of weather data only resulted in marginal
+improvements in the predictive capacity of the models. Despite observing a
+preliminary correlation between weather predictors and revenue, in correlation
+analysis and more simple linear models, when added as predictors in
+autoregressive models, the weather predictors did not improve the models'
+predictive abilities. The best-performing model was still a hybrid model, which
+combined weather data with 90 autoregressive lags, trained on the maximum
+amount of historical data. The modest impact of weather data challenges the
+initial industry assumptions and points to the potential for Bayesian
+time-series models to be more suitable for daily revenue prediction. This study
+sets the groundwork for additional Bayesian data analysis on this case study
+and comparable scenarios. Future research should expand on the practical use of
+Bayesian forecasting demonstrated here, emphasising its value in real-world
+business decisions and resource allocation.

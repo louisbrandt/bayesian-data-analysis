@@ -1,45 +1,204 @@
-\section{Results}
+\section{Results and Discussion}
+The Bayesian models employed show promising results for predicting daily
+revenue at OLIOLI. 
+Generally, the best-performing models are those complex
+enough to us all available historical data, while simpler models
+perform worse with increasing data volume.
+\subsection{Bayesian Model Comparison}
+\begin{center}
+  \textit{What is the best-performing Bayesian model for predicting daily revenue for OLIOLI with weather data? }
+\end{center}
+Multiple metrics were computed for each model's validation and test set
+predictive performance, many of which were found to tell similar stories about
+the model's performance. The Log Pointwise Predictive Density (LPD) was chosen
+as the primary metric for model comparison as it is a direct measure of the
+model's ability to explain the observations and, due to all LPD values being
+related to the same data set, modelling $P(D_{test}|M_i)$, are used to compute
+the Bayes Factor for predictive performance on the test set. The measure of
+spread in a model's predictive distribution was best captured by the Mean
+Absolute Deviation (MAD), which was used to quantify the models' predictive
+uncertainty.
 
-An arsenal of models fitted to various subsets of the data, each with their own
-explicit assumptions, sets a foundation for (+necessitates) a rigorous evaluation
-and discussion of results and their implications. This section highlights notable
-findings and applies the lens of bayesian model comparison to bring order and 
-to interpret the performance of the models. 
+Table \ref{tab:LPD_test} ranks the models' performance on the test set.
+This ranking is supported by the Bayes Factor for predictive performance on the
+test set, computed using the LPD values in Table \ref{tab:LPD_test}. The rank
+of a model $M$, defined as $M_r$, is the number of models with a higher
+Bayes Factor for predictive performance on the test set than the next model,
+$M_{r+1}$. Ordering models by their rank means that for every rank in the
+table, the Bayes Factor $BF_{r,r+1} =
+\frac{P(D_{test}|M_r)}{P(D_{test}|M_{r+1})}$ is greater than 1 for all rows.
+\begin{figure}[h]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \label{fig:LPD_test}
+    \caption{Test set}
+    \begin{tabular}{r l c c}
+    \toprule
+    \textbf{Rank} & \textbf{Model} & \textbf{LPD} & \textbf{MAD} \\ 
+    \midrule
+    \large{\textbf{1}} & $M_4{-}90{-1166}$ & -16.705& 0.186 \\
+    2 & $M_4{-}30{-}1166$ & -16.751& 0.192 \\
+    3 & $M_3{-}30{-}1166$ & -18.051& 0.211 \\
+    4 & $M_3{-}90{-}1166$ & -18.106& 0.194 \\
+    5 & $M_4{-}30{-}365$  & -19.585& 0.182 \\
+    6 & $M_4{-}7{-}1166$  & -19.924& 0.276 \\
+    \bottomrule
+    \end{tabular}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.45\textwidth}
+    \label{fig:LPD_valid}
+    \caption{Validation set}
+    \begin{tabular}{r l c c}
+    \toprule
+    \textbf{Rank} & \textbf{Model} & \textbf{LPD} & \textbf{MAD} \\ 
+    \midrule
+    1 & $M_3{-}90{-1166}$ & -21.047& 0.297 \\
+    2 & $M_1{-}0{-}90$ & -21.229& 0.316 \\
+    \large{\textbf{3}} & $M_4{-}90{-1166}$ & -21.335& 0.305 \\
+    4 & $M_4{-}30{-}180$ & -21.706& 0.310 \\
+    5 & $M_3{-}30{-1166}$ & -22.113& 0.338 \\
+    6 & $M_3{-}7{-}90$ & -22.257& 0.289 \\
+    \bottomrule
+    \end{tabular}
+\end{subfigure}
+\caption{Model, LPD, and MAD for the top six models on unseen observations}
+\label{tab:LPD_test}
+\end{figure}
 
-Metrics that should be familiar to the reader are used to quantify the predictive
-power of the models, such as the mean absolute error (MAE), while bayesian model 
-comparison tools are employed to answer the research questions posed in the 
-introduction, LOO validation \& WAIC.
+The best-performing model on the test set is the \texttt{Hybrid Model}, which
+fit on all the data, combines the temperature and precipitation weather
+predictors and 90 autoregressive lags. On the validation set, that same model,
+$M_4{-}90{-}1166$, ranked third and is outperformed by the \texttt{AR Model}
+with 90 lags and, perhaps surprisingly, the \texttt{Simple Temp.\ Model} fit
+only on the last 90 days of data. That is to say that the Bayes Factor provides
+evidence that those two models are a better fit than the \texttt{Hybrid Model}
+on the validation set. Looking further into the predictive performance of the
+\texttt{Hybrid Model} on the test set: the 95\% HDI for the predictions
+contained the true value on all the test observations. The 50\% HDI for the
+predictions, plotted as a darker shade of orange, contained 16/21 true values.
+The mean of the prediction of each observation was within the goal of 0.3
+standard units on 11 of the 21 samples and was within the usable range of 0.5
+standard units on 17 of the 21 samples, see Appendix Table
+\ref{tab:hybrid_preds}. This performance is a strong case for the
+\texttt{Hybrid Model} as an informative predictive model for OLIOLI's daily
+revenue prediction and operational use.
 
-\subsection{Model Comparison}
+For an overview of the predictive performance of each family of models fit on
+different data, see Figure \ref{fig:LPD_barplot}. The figure shows the LPD
+values for each model, with error bars capturing the models fit different lags.
+The figure illustrates the improvements in predictive performance as data is
+modelled as a Bayesian time series. The \texttt{AR Model} and \texttt{Hybrid
+Models} perform similarly, and results improve with more data.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\textwidth]{/Users/louisbrandt/itu/6/bachelor/eval/model_comparison/LPD_barplot.png}
+  \caption{\textbf{Log Pointwise Predictive Density} for all the $M_{1-4}$ families and the respective data splits. LPD values below -50 are not shown: ($M_3{-}90{-}90$ \& $M_4{-}90{-}90$). Error bars capture the models fit different lags, with the mean plotted. The plot gives an overview of how well each model's predictive distribution on the test observation explains the test data.}
+  \label{fig:LPD_barplot}
+\end{figure}
+Looking more closely at the \texttt{Hybrid Model} and its variations in Figure
+\ref{fig:LPD_MAD_hybrid_scatter}, it is clear that when more lags are included,
+and more test data is available, the posterior predictive distribution is
+closer to and more concentrated around the test observations.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\textwidth]{/Users/louisbrandt/itu/6/bachelor/eval/model_comparison/LPD_MAD_hybrid_scatter.png}
+  \caption{\textbf{Hybrid Model LPD \& MAD } for each data split and lag combination. LPD values below -30 are not shown, this removed the following models from the plot: $M_4-90-90$}
+  \label{fig:LPD_MAD_hybrid_scatter}
+\end{figure}
+\subsection{Data Volume Analysis}
+\begin{center}
+  \textit{What is the optimal data volume for model performance in accurate revenue prediction?}
+\end{center}
+Figure \ref{fig:lpd_lags_days_heatmap} illustrates this, grouping LPD scores by the 
+number of lags and the number of days of data used to fit the model and computing the mean.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\textwidth]{/Users/louisbrandt/itu/6/bachelor/eval/model_comparison/LPD_lags_days_heatmap.png}
+  \caption{\textbf{Mean Test LPD score} for each data split and lag combination. Non-time-series models make up lag 0.}
+  \label{fig:lpd_lags_days_heatmap}
+\end{figure}
+The trends indicated by Figure \ref{fig:lpd_lags_days_heatmap} suggest that
+models trained on larger volumes of data and with more lags generally perform
+better in explaining the test data. This trend could be attributed to the
+models' increased capacity to capture and learn from more complex and nuanced
+patterns in the data with more lags and a more comprehensive data volume.
 
-The primary research question of this study is to determine the best-performing
-model for the case study, predicting the restaurant chain's revenue. In the
-Bayesian framework, both the choice of data to fit a model and the model itself
-are intertwined. The observations are integral in shaping the posterior
-distribution through the likelihood function, so the model and the inferred
-posterior of the model parameters do not exist separately from the data.
-With many plausible models fit on the same data, the question of which model is
-best can be answered by applying Bayesian model comparison techniques, as
-described in \cite{statrethinking} Chapter 7.5. The seamless application of
-this comparison and selection is an attractive facet of working within the
-Bayesian system.
-However, the volume of data itself is also a core subject of this paper and
-case study. To compare models fit on different subsets of the data, we can
-borrow ideas from frequentist approaches like mean squared error (MSE) and mean
-absolute error (MAE).
-In the Bayesian context, we can assess the out-of-sample predictive accuracy of
-the models, even though Bayesian models do not have a separate 'out-of-sample'
-by definition. Techniques such as cross-validation or information criteria
-(e.g., WAIC and LOO-CV) can approximate the out-of-sample predictive accuracy
-without explicitly holding out data during the modeling process.
+However, while a positive correlation between data volume and performance was
+found here, it is crucial to consider that the relationship between data volume
+and model performance is not always linear or predictable. Various factors, such
+as the data quality, the model's complexity, and the computational
+resources available, can influence this relationship \cite{statrethinking}.
+Models that were more complicated, fit on more data and used more lags took
+more time to approximate the posterior. For example, the most time-consuming model,
+$M_4{-}90{-}1166$, only took 15 minutes on average to fit, and the least time
+consuming model, $M_1{-}0{-}90$, took only 2 minutes on average. The
+computational cost of the most difference was not significant enough to warrant
+further investigation, but it is worth noting for future work on this topic and
+case study.
+Furthermore, while the models with more lags showed improved performance, the
+increased complexity could also lead to overfitting, especially with smaller
+datasets. Therefore, careful consideration should be given when choosing the
+number of lags for the model.
+This analysis provides valuable insights into the role of data volume in
+predictive modelling. Furthermore, it lays the groundwork for future studies to fine-tune
+the balance between data volume, the number of lags, and model performance.
 
-To identify the best model, we can examine its predictive performance on unseen
-data, mimicking real-world scenarios. To do this, we can address the following
-questions: How close does the model predict the actual value? How well does the
-model explain the true data? And how well does the model predict future data?
+\subsection{Model Interpretability}
+\begin{center}
+  \textit{What are the assumptions and compromises of different models, and how do they impact the performance and the interpretability of the results? }
+\end{center}
+Fitting multiple Bayesian models with overlapping predictors gives us the
+opportunity to compare the posterior distributions of the predictors and see
+how they change with different models, data and combinations of predictors. One
+strong assumption motivating the whole analysis is that temperature has a
+direct and measurable impact on revenue. In a linear model, the coefficient of
+temperature directly measures the impact of temperature on revenue, in the
+context of the model, data and other predictors. 
 
-By evaluating the models using both Bayesian model comparison techniques and
-frequentist measures of performance on different subsets of data, we can
-effectively determine which model best predicts the restaurant chain's revenue
-and addresses the primary research question of this study.
+The main goal of the \texttt{Weather GLM} was to examine the posterior
+distributions of weather predictors when used to model revenue. This is
+accomplished by defining a Region Of Practical Equivalence (ROPE) around zero
+from -0.05 to 0.05; Figure \ref{fig:glm-rope} illustrates this analysis. The
+results indicate that the model parameter for temperature, \texttt{alpha\_temp}, 
+was the only significant predictor for three out of the four \texttt{Weather
+GLM} models. This is a strong suggestion that temperature plays a substantial
+role in influencing revenue, leading to its inclusion in the \texttt{Hybrid
+Model}, but is not conclusive due to the \texttt{Weather GLM} model's poor
+predictive performance. The other weather predictors, including
+\texttt{alpha\_cloud}, \texttt{alpha\_wind}, \texttt{alpha\_humid}, and
+\texttt{alpha\_precip}, were not deemed significant in any
+\texttt{Weather GLM} models. The posterior distributions for the three
+precipitation index variable, \texttt{alpha\_precip}, demonstrated a high
+standard deviation, even though they converged well with R hat values $<$ 1.01
+and had low MCSE. In summary, within the context of this model and data, the
+impact of precipitation on revenue was deemed inconclusive. However, its
+inclusion in the \texttt{Hybrid Model} offers an opportunity to further
+investigate its potential influence on revenue prediction.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{/Users/louisbrandt/itu/6/bachelor/eval/model_comparison/weather_params.png}
+  \caption{\textbf{Posterior Estimate} of the weather predictors present in the various \texttt{Weather GLM} models. The four models estimate each parameter's posterior mean and standard deviation, and the mean and 95\% HDIs are plotted. The ROPE is defined from -0.05 to 0.05.}
+  \label{fig:glm-rope}
+\end{figure}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{/Users/louisbrandt/itu/6/bachelor/eval/model_comparison/hybrid_weather_params.png}
+  \caption{\textbf{Posterior Estimate} of the weather predictors present in all 16 variations of the \texttt{Hybrid Models}. For each parameter and model variation, the posterior mean and 95\% HDI are plotted. The same ROPE is defined from -0.05 to 0.05.}
+  \label{fig:hybrid-rope}
+\end{figure}
+
+The same analysis was performed on the \texttt{Hybrid Model} to gauge the
+impact of the weather predictors when used to model revenue by examining the
+posterior distributions of the weather predictors. 
+The findings illustrated in Figure \ref{fig:hybrid-rope} do not identify
+precipitation or temperature as significant factors within any of the
+\texttt{Hybrid Models}. Despite $M_4{-}90{-}1166$ leading in test data
+performance, none of its weather predictors' 95\% HDI fall outside the ROPE.
+This strongly suggests that when data is primarily modelled as a time-series,
+weather predictors may not significantly influence revenue, a deviation from
+the initial hypothesis that posited a causal relationship between weather and
+revenue. Although this conclusion suggests that time-series models may be more
+appropriate for daily revenue prediction, it doesn't definitively rule out the
+influence of weather. There might be instances where weather has a causal
+relationship with revenue in some stores but not in others, necessitating
+further investigation.

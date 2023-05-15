@@ -1,7 +1,7 @@
 \documentclass{article}
 
 % imports
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=0.75in]{geometry}
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{subcaption}
@@ -12,6 +12,8 @@
 \usepackage{array} % for \arraybackslash
 \usepackage{calc}
 \usepackage{tabularx}
+\usepackage{rotating}
+\usepackage{hyperref}
 
 % begin document
 \begin{document}
@@ -20,11 +22,12 @@
 \input{sections/title}
 
 % table of contents
+\setcounter{tocdepth}{2}
 \tableofcontents
 \newpage
 
 % abstract
-% \input{sections/abstract}
+\input{sections/abstract}
 
 % introduction
 \input{sections/intro}
@@ -41,16 +44,17 @@
 % results
 \input{sections/results}
 
-% discussion
-\input{sections/discussion}
-
 % conclusion
-%\input{sections/conclusion}
+\input{sections/conclusion}
 
 \newpage
 % references
 % including the bibliography with natbib 
 \bibliography{references}
 \bibliographystyle{plain}
+
+\newpage
+% appendix 
+\input{sections/appendix}
 
 \end{document}
