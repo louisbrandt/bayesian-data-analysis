@@ -1,1 +1,1 @@
-Bayesian Data Analysis project for my Data Science Bachelor's Thesis
+Bayesian Data Analysis project for my final thesis presented for a Bachelor of Science in Data Science
